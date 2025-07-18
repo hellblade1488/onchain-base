@@ -1,0 +1,53 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Blockchain2048 {
+    address public owner;
+    uint256 public movePrice = 0.0000001 ether;
+
+    struct Game {
+        address player;
+        uint256 score;
+        uint256 moves;
+        uint256 lastUpdated;
+    }
+
+    mapping(address => Game) public games;
+
+    event MoveMade(address indexed player, uint256 moveNumber, uint256 newScore);
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function startGame() external {
+        require(games[msg.sender].player == address(0), "Game already started");
+        games[msg.sender] = Game({
+            player: msg.sender,
+            score: 0,
+            moves: 0,
+            lastUpdated: block.timestamp
+        });
+    }
+
+    function makeMove(uint256 pointsGained) external payable {
+        require(msg.value >= movePrice, "Insufficient ETH sent");
+        require(games[msg.sender].player != address(0), "Game not started");
+
+        Game storage game = games[msg.sender];
+        game.score += pointsGained;
+        game.moves += 1;
+        game.lastUpdated = block.timestamp;
+
+        emit MoveMade(msg.sender, game.moves, game.score);
+    }
+
+    function getGame(address player) external view returns (Game memory) {
+        return games[player];
+    }
+
+    function withdraw() external {
+        require(msg.sender == owner, "Only owner can withdraw");
+        payable(owner).transfer(address(this).balance);
+    }
+}
