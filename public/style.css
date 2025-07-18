@@ -1,0 +1,69 @@
+:root {
+  --base-bg: #0a0a0a;
+  --base-tile-bg: #1b1b1f;
+  --base-text: #ffffff;
+  --base-tile-highlight: #2d2d35;
+  --base-blue: #0052ff;
+  --base-purple: #702dfd;
+}
+
+body {
+  background-color: var(--base-bg);
+  color: var(--base-text);
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  padding-top: 40px;
+}
+
+h1 {
+  font-size: 48px;
+  margin-bottom: 20px;
+  background: linear-gradient(to right, var(--base-blue), var(--base-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 700;
+}
+
+#board {
+  display: grid;
+  grid-template-columns: repeat(4, 100px);
+  grid-template-rows: repeat(4, 100px);
+  gap: 10px;
+  background-color: var(--base-tile-bg);
+  padding: 10px;
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(0, 82, 255, 0.2);
+}
+
+.tile {
+  width: 100px;
+  height: 100px;
+  background-color: var(--base-tile-highlight);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: bold;
+  border-radius: 10px;
+  transition: transform 0.15s ease-in-out, background-color 0.2s ease;
+  color: var(--base-text);
+  box-shadow: inset 0 0 8px rgba(112, 45, 253, 0.2);
+}
+
+.tile[data-value="2"]    { background-color: #1e1f2f; color: #a0a0ff; }
+.tile[data-value="4"]    { background-color: #2a2d4f; color: #c1c1ff; }
+.tile[data-value="8"]    { background-color: #3442b4; color: #ffffff; }
+.tile[data-value="16"]   { background-color: #3c5df7; color: #ffffff; }
+.tile[data-value="32"]   { background-color: #5f7eff; color: #ffffff; }
+.tile[data-value="64"]   { background-color: #728aff; color: #ffffff; }
+.tile[data-value="128"]  { background-color: #8256f7; color: #ffffff; font-size: 22px; }
+.tile[data-value="256"]  { background-color: #a166f9; color: #ffffff; font-size: 22px; }
+.tile[data-value="512"]  { background-color: #bc7ffb; color: #ffffff; font-size: 20px; }
+.tile[data-value="1024"] { background-color: #db9fff; color: #ffffff; font-size: 18px; }
+.tile[data-value="2048"] { background-color: #f6e05e; color: #000; font-size: 18px; }
