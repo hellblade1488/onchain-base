@@ -51,3 +51,15 @@ MIT — feel free to use or fork for your own ideas!
 
 ## 🙌 Contribute
 Pull requests and game ideas welcome!
+
+---
+
+## Smart Contracts on Base
+
+In addition to game experiments, this repo includes a small collection of
+Solidity smart contracts deployed on **Base Mainnet**. Each contract demonstrates
+a different on-chain primitive — from public guestbooks to time-locked savings.
+
+See [**CONTRACTS.md**](CONTRACTS.md) for descriptions and deployed addresses.
+
+Contracts live in [`contracts/`](contracts/).
