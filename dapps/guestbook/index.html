@@ -6,14 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Base GuestBook</title>
   <style>
-    
     :root {
-      --surface-2: #1a1a26;
       --base-blue: #0052ff; --base-blue-dark: #003ecc;
-      --bg: #0a0a0f; --surface: #14141c;
+      --bg: #0a0a0f; --surface: #14141c; --surface-2: #1a1a26;
       --text: #f5f5fa; --text-dim: #8a8a99;
       --border: #2a2a3a; --warn: #ff9d00;
-      --error: #ff4d4d;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -39,8 +36,18 @@
       padding: 0.75rem 1.5rem; border-radius: 8px;
       font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.15s;
     }
-    button:hover { background: var(--base-blue-dark); }
-    button:disabled { background: var(--border); cursor: not-allowed; }
+    button:hover:not(:disabled) { background: var(--base-blue-dark); }
+    button:disabled { background: var(--border); cursor: not-allowed; opacity: 0.6; }
+    textarea {
+      width: 100%; min-height: 80px;
+      background: var(--surface-2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 0.75rem; font-family: inherit; font-size: 1rem;
+      resize: vertical; margin-bottom: 0.5rem;
+    }
+    textarea:focus { outline: none; border-color: var(--base-blue); }
+    .form-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    .char-counter { color: var(--text-dim); font-size: 0.85rem; font-family: ui-monospace, monospace; }
     #wallet-status {
       margin-top: 1rem; color: var(--text-dim);
       font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9rem;
@@ -67,27 +74,13 @@
       display: flex; justify-content: space-between;
       margin-bottom: 0.5rem; font-size: 0.85rem;
     }
-    .entry-author {
-      color: var(--base-blue);
-      font-family: ui-monospace, "SF Mono", Menlo, monospace;
-    }
+    .entry-author { color: var(--base-blue); font-family: ui-monospace, "SF Mono", Menlo, monospace; }
     .entry-time { color: var(--text-dim); }
     .entry-message { color: var(--text); white-space: pre-wrap; word-break: break-word; }
     footer {
       padding: 1.5rem; text-align: center; border-top: 1px solid var(--border);
       color: var(--text-dim); font-size: 0.875rem;
     }
-    textarea {
-      width: 100%; min-height: 80px;
-      background: var(--surface-2); color: var(--text);
-      border: 1px solid var(--border); border-radius: 8px;
-      padding: 0.75rem; font-family: inherit; font-size: 1rem;
-      resize: vertical; margin-bottom: 0.5rem;
-    }
-    textarea:focus { outline: none; border-color: var(--base-blue); }
-    .form-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-    .char-counter { color: var(--text-dim); font-size: 0.85rem; font-family: ui-monospace, monospace; }
-    .char-counter.over { color: var(--error); }
   </style>
 </head>
 <body>
@@ -98,7 +91,12 @@
 
   <main>
     <section id="wallet-section">
-      <section id="sign-section" style="display: none;">
+      <button id="connect-btn">Connect Wallet</button>
+      <p id="wallet-status">Not connected</p>
+      <div id="network-warning" style="display: none;"></div>
+    </section>
+
+    <section id="sign-section" style="display: none;">
       <h2>Sign the guestbook</h2>
       <textarea id="message-input" placeholder="Leave a message…" maxlength="280"></textarea>
       <div class="form-row">
@@ -106,10 +104,6 @@
         <button id="sign-btn">Sign on chain</button>
       </div>
       <div id="tx-result"></div>
-    </section>
-      <button id="connect-btn">Connect Wallet</button>
-      <p id="wallet-status">Not connected</p>
-      <div id="network-warning" style="display: none;"></div>
     </section>
 
     <section id="stats-section" style="display: none;">
@@ -124,9 +118,7 @@
     </section>
   </main>
 
-  <footer>
-    <p>Powered by Base.</p>
-  </footer>
+  <footer><p>Powered by Base.</p></footer>
 
   <script type="module">
     import { BrowserProvider, Contract } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
@@ -155,14 +147,12 @@
     function escapeHtml(s) {
       return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
     }
-
     function relativeTime(unixSec) {
       const diff = Math.floor(Date.now() / 1000) - unixSec;
       if (diff < 60) return `${diff}s ago`;
       if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
       if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
       if (diff < 2592000) return `${Math.floor(diff / 86400)}d ago`;
-      if (diff < 31536000) return `${Math.floor(diff / 2592000)}mo ago`;
       return `${Math.floor(diff / 31536000)}y ago`;
     }
 
@@ -170,13 +160,11 @@
       const total = await contract.totalEntries();
       totalEntriesEl.textContent = total.toString();
       statsSection.style.display = "block";
-
       if (total === 0n) {
-        entriesList.innerHTML = "<p>No entries yet. Be the first to sign!</p>";
+        entriesList.innerHTML = "<p>No entries yet.</p>";
         entriesSection.style.display = "block";
         return;
       }
-
       const count = Number(total);
       const limit = Math.min(count, 10);
       const start = count - limit;
@@ -185,7 +173,6 @@
         const [author, message, timestamp] = await contract.getEntry(i);
         entries.push({ id: i, author, message, timestamp: Number(timestamp) });
       }
-
       entriesList.innerHTML = entries.map(e => `
         <div class="entry">
           <div class="entry-header">
@@ -201,7 +188,7 @@
     async function checkNetwork() {
       const network = await provider.getNetwork();
       if (network.chainId !== BASE_CHAIN_ID) {
-        networkWarning.innerHTML = `<div class="warn-banner">Wrong network. Switch to Base mainnet. <button id="switch-btn">Switch</button></div>`;
+        networkWarning.innerHTML = `<div class="warn-banner">Wrong network. <button id="switch-btn">Switch</button></div>`;
         networkWarning.style.display = "block";
         document.getElementById("switch-btn").addEventListener("click", switchToBase);
         return false;
@@ -229,10 +216,7 @@
     }
 
     async function connectWallet() {
-      if (!window.ethereum) {
-        walletStatus.textContent = "No wallet detected. Install MetaMask or Rabby.";
-        return;
-      }
+      if (!window.ethereum) { walletStatus.textContent = "No wallet detected."; return; }
       try {
         provider = new BrowserProvider(window.ethereum);
         await provider.send("eth_requestAccounts", []);
@@ -252,24 +236,10 @@
     }
 
     connectBtn.addEventListener("click", connectWallet);
-
     if (window.ethereum) {
       window.ethereum.on("chainChanged", () => window.location.reload());
       window.ethereum.on("accountsChanged", () => window.location.reload());
     }
-    const messageInput = document.getElementById("message-input");
-    const signBtn = document.getElementById("sign-btn");
-    const charCounter = document.getElementById("char-counter");
-    const MAX_MESSAGE_LENGTH = 280;
-
-    function updateCounter() {
-      charCounter.classList.toggle("over", len > MAX_MESSAGE_LENGTH);
-      const len = messageInput.value.length;
-      charCounter.textContent = `${len} / ${MAX_MESSAGE_LENGTH}`;
-      signBtn.disabled = len === 0 || len > MAX_MESSAGE_LENGTH;
-    }
-    messageInput.addEventListener("input", updateCounter);
-    updateCounter();
   </script>
 </body>
 </html>
