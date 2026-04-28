@@ -7,15 +7,10 @@
   <title>Hellblade Donation</title>
   <style>
     :root {
-      --base-blue: #0052ff;
-      --base-blue-dark: #003ecc;
-      --base-blue-light: #5b8eff;
-      --bg: #05060d;
-      --bg-2: #0a0c18;
-      --surface: #11142a;
-      --surface-2: #1a1d3a;
-      --text: #f5f5fa;
-      --text-dim: #8a8aa0;
+      --base-blue: #0052ff; --base-blue-dark: #003ecc; --base-blue-light: #5b8eff;
+      --bg: #05060d; --bg-2: #0a0c18;
+      --surface: #11142a; --surface-2: #1a1d3a;
+      --text: #f5f5fa; --text-dim: #8a8aa0;
       --border: #232845;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,14 +23,26 @@
       min-height: 100vh;
       line-height: 1.5;
     }
-    header { padding: 1.25rem 2rem; border-bottom: 1px solid var(--border); }
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+      background: rgba(5,6,13,0.6);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .brand {
+      font-weight: 700; font-size: 1.1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .brand .bolt { color: var(--base-blue); font-size: 1.4rem; }
     button {
       background: var(--base-blue); color: white; border: none;
       padding: 0.6rem 1.2rem; border-radius: 999px;
       font-size: 0.95rem; font-weight: 600; cursor: pointer;
-      font-family: inherit;
+      transition: transform 0.1s, background 0.15s; font-family: inherit;
     }
-    button:hover { background: var(--base-blue-dark); }
+    button:hover { background: var(--base-blue-dark); transform: translateY(-1px); }
     section { padding: 1.5rem 2rem; }
     h1 { font-size: 3rem; font-weight: 800; }
     h2 { font-size: 1.05rem; margin-bottom: 1rem; }
@@ -43,9 +50,14 @@
   </style>
 </head>
 <body>
-  <header>
-    <div>⚡ tipjar</div>
-    <button id="connect-btn">Connect Wallet</button>
+  <header class="topbar">
+    <div class="brand">
+      <span class="bolt">⚡</span>
+      <span>tipjar</span>
+    </div>
+    <div class="wallet-area">
+      <button id="connect-btn">Connect Wallet</button>
+    </div>
   </header>
 
   <section>
