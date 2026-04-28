@@ -554,6 +554,18 @@
     let userAddress = null, ownerAddress = null;
     let currentChainId = null;
 
+    // Persist user's explicit disconnect across page reloads
+    const DISCONNECTED_KEY = "tipjar_disconnected";
+    function isManuallyDisconnected() {
+      try { return localStorage.getItem(DISCONNECTED_KEY) === "1"; } catch { return false; }
+    }
+    function setManuallyDisconnected(v) {
+      try {
+        if (v) localStorage.setItem(DISCONNECTED_KEY, "1");
+        else localStorage.removeItem(DISCONNECTED_KEY);
+      } catch {}
+    }
+
     // ---- Helpers ----
     function shortenAddress(a) { return `${a.slice(0, 6)}…${a.slice(-4)}`; }
     function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
@@ -782,6 +794,7 @@
     // ---- Disconnect ----
     function disconnectWallet() {
       // Clear local state. Wallet itself remains authorized; user can revoke via wallet UI.
+      setManuallyDisconnected(true);
       try { if (contract) contract.removeAllListeners(); } catch (e) {}
       provider = null; signer = null; contract = null;
       userAddress = null; ownerAddress = null; currentChainId = null;
@@ -799,14 +812,22 @@
     }
 
     // ---- Connect ----
-    async function connectWallet() {
+    async function connectWallet(silent = false) {
       if (!window.ethereum) {
-        alert("No wallet detected. Install MetaMask or Rabby.");
+        if (!silent) alert("No wallet detected. Install MetaMask or Rabby.");
         return;
       }
       try {
         provider = new BrowserProvider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
+        // Silent path = use eth_accounts (no popup, only returns already-authorized accounts).
+        // Manual click path = use eth_requestAccounts (may trigger popup).
+        if (silent) {
+          const accounts = await window.ethereum.request({ method: "eth_accounts" });
+          if (!accounts || accounts.length === 0) return; // not previously authorized
+        } else {
+          await provider.send("eth_requestAccounts", []);
+        }
+        setManuallyDisconnected(false);
         signer = await provider.getSigner();
         userAddress = await signer.getAddress();
 
@@ -838,6 +859,12 @@
 
     // ---- Init ----
     renderDisconnected();
+
+    // Auto-reconnect if wallet was previously authorized and user didn't manually disconnect
+    (async () => {
+      if (isManuallyDisconnected()) return;
+      await connectWallet(true);
+    })();
 
     if (window.ethereum) {
       window.ethereum.on("chainChanged", () => window.location.reload());
