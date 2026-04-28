@@ -609,7 +609,7 @@
 
     function renderDisconnected() {
       walletArea.innerHTML = `<button id="connect-btn">Connect Wallet</button>`;
-      $("connect-btn").addEventListener("click", connectWallet);
+      $("connect-btn").addEventListener("click", () => connectWallet(false));
     }
 
     // ---- Tip button enable/disable ----
