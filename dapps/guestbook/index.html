@@ -124,8 +124,11 @@
       const message = messageInput.value.trim();
       if (!message) return;
       signBtn.disabled = true;
+      const originalText = signBtn.textContent;
+      signBtn.textContent = "Confirm in wallet…";
       try {
         const tx = await contract.sign(message);
+        signBtn.textContent = "Waiting for confirmation…";
         await tx.wait();
         showToast("success", "Signed!");
         messageInput.value = "";
@@ -134,6 +137,7 @@
       } catch (err) {
         showToast("error", `Failed: ${err.shortMessage || err.message}`);
       } finally {
+        signBtn.textContent = originalText;
         updateCounter();
       }
     }
