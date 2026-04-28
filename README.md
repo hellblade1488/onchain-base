@@ -1,65 +1,56 @@
 # onchain-base
-Experiments and tools for building on Base L2
-# 🕹️ Base Game Experiments
 
-This repository contains experimental blockchain games built on **Base**, Coinbase's Ethereum L2.
+Experiments and tools for building on **Base** — Coinbase's Ethereum L2.
 
----
-
-## 🔶 About Base
-Base is a secure, low-cost, developer-friendly Ethereum L2 built to bring the next billion users onchain.
+This repo collects everything I've shipped on Base: smart contracts, a live dApp,
+and earlier prototypes.
 
 ---
 
-## 🛠️ Project Goals
-- Build simple, interactive games that live entirely or partially onchain
-- Explore gas-efficient mechanics for L2
-- Use Base’s fast finality & low fees to experiment with new game ideas
+## 🟦 Live dApp
+
+**Base GuestBook** — public on-chain guestbook. Connect your wallet, leave a 280-char message, and it lives forever in a smart contract.
+
+🔗 **Try it:** <https://hellblade1488.github.io/onchain-base/dapps/guestbook/>
+
+📂 Source: [`dapps/guestbook/`](dapps/guestbook/)
 
 ---
 
-## 📁 Folder Structure (Planned)
-```
-/contracts      # Solidity smart contracts
-/frontend       # dApp frontend code (React, Vite, etc.)
-/scripts        # Deployment and interaction scripts
-/docs           # Additional documentation or specs
-```
+## 📜 Smart contracts on Base mainnet
+
+Five Solidity contracts deployed and verified on Base (chain id `8453`):
+
+| Contract | Purpose |
+|----------|---------|
+| GuestBook | Public on-chain guestbook with 280-char messages |
+| TipJar | ETH tip jar with optional notes; owner-only withdrawal |
+| SimpleVoting | Lightweight on-chain polling, one vote per address |
+| TimeLockedSavings | Per-user ETH lockbox with chosen unlock time |
+| OnChainTodo | Personal todo list, scoped per address |
+
+→ Full list with deployed addresses and verification links: [**CONTRACTS.md**](CONTRACTS.md)
+
+📂 Solidity source: [`contracts/`](contracts/)
 
 ---
 
-## 🚧 Planned Games
-- [ ] 2048 Onchain (each move costs 0.0000001 ETH)
-- [ ] Onchain Rock-Paper-Scissors
-- [ ] Leaderboard contract with XP tracking
+## 🛠 Tech
+
+- Solidity `^0.8.20`, compiled with `0.8.34`
+- Frontends use **ethers.js v6** loaded from CDN — no build step, single-file dApps
+- Contracts deployed via [Remix IDE](https://remix.ethereum.org)
+- Verified on [Sourcify](https://sourcify.dev) and viewable on [BaseScan](https://basescan.org)
+- dApp hosted free on **GitHub Pages**
 
 ---
 
-## 📚 Tech Stack
-- Solidity
-- Hardhat
-- Base Goerli/Mainnet
-- Ethers.js / Wagmi / RainbowKit
-- React + Tailwind CSS (optional)
+## 🎮 Past experiments
+
+- [**2048 game**](2048) — a small Vite-based 2048 clone. First experiment in this repo.
 
 ---
 
-## 📜 License
-MIT — feel free to use or fork for your own ideas!
+## License
 
----
-
-## 🙌 Contribute
-Pull requests and game ideas welcome!
-
----
-
-## Smart Contracts on Base
-
-In addition to game experiments, this repo includes a small collection of
-Solidity smart contracts deployed on **Base Mainnet**. Each contract demonstrates
-a different on-chain primitive — from public guestbooks to time-locked savings.
-
-See [**CONTRACTS.md**](CONTRACTS.md) for descriptions and deployed addresses.
-
-Contracts live in [`contracts/`](contracts/).
+[MIT](LICENSE)
