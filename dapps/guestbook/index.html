@@ -10,7 +10,7 @@
       --base-blue: #0052ff; --base-blue-dark: #003ecc;
       --bg: #0a0a0f; --surface: #14141c; --surface-2: #1a1a26;
       --text: #f5f5fa; --text-dim: #8a8a99;
-      --border: #2a2a3a; --warn: #ff9d00;
+      --border: #2a2a3a; --warn: #ff9d00; --error: #ff4d4d;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -48,6 +48,7 @@
     textarea:focus { outline: none; border-color: var(--base-blue); }
     .form-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
     .char-counter { color: var(--text-dim); font-size: 0.85rem; font-family: ui-monospace, monospace; }
+    .char-counter.over { color: var(--error); }
     #wallet-status {
       margin-top: 1rem; color: var(--text-dim);
       font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9rem;
@@ -101,7 +102,7 @@
       <textarea id="message-input" placeholder="Leave a message…" maxlength="280"></textarea>
       <div class="form-row">
         <span class="char-counter" id="char-counter">0 / 280</span>
-        <button id="sign-btn">Sign on chain</button>
+        <button id="sign-btn" disabled>Sign on chain</button>
       </div>
       <div id="tx-result"></div>
     </section>
@@ -132,10 +133,14 @@
     ];
     const BASE_CHAIN_ID = 8453n;
     const BASE_CHAIN_HEX = "0x2105";
+    const MAX_MESSAGE_LENGTH = 280;
 
     const connectBtn = document.getElementById("connect-btn");
     const walletStatus = document.getElementById("wallet-status");
     const networkWarning = document.getElementById("network-warning");
+    const messageInput = document.getElementById("message-input");
+    const signBtn = document.getElementById("sign-btn");
+    const charCounter = document.getElementById("char-counter");
     const statsSection = document.getElementById("stats-section");
     const totalEntriesEl = document.getElementById("total-entries");
     const entriesSection = document.getElementById("entries-section");
@@ -154,6 +159,13 @@
       if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
       if (diff < 2592000) return `${Math.floor(diff / 86400)}d ago`;
       return `${Math.floor(diff / 31536000)}y ago`;
+    }
+
+    function updateCounter() {
+      const len = messageInput.value.length;
+      charCounter.textContent = `${len} / ${MAX_MESSAGE_LENGTH}`;
+      charCounter.classList.toggle("over", len > MAX_MESSAGE_LENGTH);
+      signBtn.disabled = len === 0 || len > MAX_MESSAGE_LENGTH;
     }
 
     async function loadEntries() {
@@ -236,6 +248,9 @@
     }
 
     connectBtn.addEventListener("click", connectWallet);
+    messageInput.addEventListener("input", updateCounter);
+    updateCounter();
+
     if (window.ethereum) {
       window.ethereum.on("chainChanged", () => window.location.reload());
       window.ethereum.on("accountsChanged", () => window.location.reload());
