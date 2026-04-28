@@ -108,5 +108,12 @@
   <footer>
     <p>Powered by Base.</p>
   </footer>
+
+  <script type="module">
+    import { BrowserProvider } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
+
+    // Just import ethers for now — actual logic in next version.
+    console.log("ethers.js loaded:", BrowserProvider);
+  </script>
 </body>
 </html>
