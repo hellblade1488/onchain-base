@@ -50,6 +50,9 @@
     .entry-message { color: var(--text); white-space: pre-wrap; word-break: break-word; }
     .empty-state { color: var(--text-dim); text-align: center; padding: 1.5rem 0; }
     footer { padding: 1.5rem; text-align: center; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 0.875rem; }
+    footer a { color: var(--text-dim); }
+    footer .footer-links { margin-top: 0.5rem; }
+    footer .footer-links a { margin: 0 0.5rem; }
   </style>
 </head>
 <body>
@@ -79,7 +82,13 @@
       <div id="entries-list">Loading…</div>
     </section>
   </main>
-  <footer><p>Powered by Base.</p></footer>
+  <footer>
+    <p>Powered by Base · contract on
+      <a href="https://basescan.org/address/0x701546B92991CAC01f98c9aaB3AB8C8dd6d1999f" target="_blank" rel="noopener">BaseScan</a></p>
+    <p class="footer-links">
+      <a href="https://github.com/hellblade1488/onchain-base" target="_blank" rel="noopener">Source on GitHub</a>
+    </p>
+  </footer>
   <script type="module">
     import { BrowserProvider, Contract } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
     const CONTRACT_ADDRESS = "0x701546B92991CAC01f98c9aaB3AB8C8dd6d1999f";
