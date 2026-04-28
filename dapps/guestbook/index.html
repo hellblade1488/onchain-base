@@ -56,11 +56,25 @@
       background: var(--warn); color: var(--bg);
       padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-left: 0.5rem;
     }
-    .stat {
-      font-size: 2.5rem; font-weight: 700;
-      color: var(--base-blue);
-    }
+    .stat { font-size: 2.5rem; font-weight: 700; color: var(--base-blue); }
     .stat-label { color: var(--text-dim); font-size: 0.875rem; }
+    .entry {
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 0;
+    }
+    .entry:last-child { border-bottom: none; }
+    .entry-header {
+      display: flex; justify-content: space-between;
+      margin-bottom: 0.5rem; font-size: 0.85rem;
+    }
+    .entry-author {
+      color: var(--base-blue);
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    }
+    .entry-time { color: var(--text-dim); }
+    .entry-message {
+      color: var(--text); white-space: pre-wrap; word-break: break-word;
+    }
     footer {
       padding: 1.5rem; text-align: center; border-top: 1px solid var(--border);
       color: var(--text-dim); font-size: 0.875rem;
@@ -85,6 +99,11 @@
       <div class="stat" id="total-entries">—</div>
       <div class="stat-label">Total messages signed</div>
     </section>
+
+    <section id="entries-section" style="display: none;">
+      <h2>Recent entries</h2>
+      <div id="entries-list">Loading…</div>
+    </section>
   </main>
 
   <footer>
@@ -101,7 +120,6 @@
       "function totalEntries() external view returns (uint256)",
       "event MessageSigned(address indexed author, string message, uint256 timestamp, uint256 indexed entryId)"
     ];
-
     const BASE_CHAIN_ID = 8453n;
     const BASE_CHAIN_HEX = "0x2105";
 
@@ -110,34 +128,55 @@
     const networkWarning = document.getElementById("network-warning");
     const statsSection = document.getElementById("stats-section");
     const totalEntriesEl = document.getElementById("total-entries");
+    const entriesSection = document.getElementById("entries-section");
+    const entriesList = document.getElementById("entries-list");
 
-    let provider = null;
-    let signer = null;
-    let contract = null;
+    let provider = null, signer = null, contract = null;
 
     function shortenAddress(addr) {
       return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
     }
 
-    async function loadStats() {
-      try {
-        const total = await contract.totalEntries();
-        totalEntriesEl.textContent = total.toString();
-        statsSection.style.display = "block";
-      } catch (err) {
-        console.error("Failed to load stats:", err);
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    }
+
+    async function loadEntries() {
+      const total = await contract.totalEntries();
+      totalEntriesEl.textContent = total.toString();
+      statsSection.style.display = "block";
+
+      if (total === 0n) {
+        entriesList.innerHTML = "<p>No entries yet. Be the first to sign!</p>";
+        entriesSection.style.display = "block";
+        return;
       }
+
+      const count = Number(total);
+      const limit = Math.min(count, 10);
+      const start = count - limit;
+      const entries = [];
+      for (let i = count - 1; i >= start; i--) {
+        const [author, message, timestamp] = await contract.getEntry(i);
+        entries.push({ id: i, author, message, timestamp: Number(timestamp) });
+      }
+
+      entriesList.innerHTML = entries.map(e => `
+        <div class="entry">
+          <div class="entry-header">
+            <span class="entry-author">${shortenAddress(e.author)}</span>
+            <span class="entry-time">${new Date(e.timestamp * 1000).toLocaleString()}</span>
+          </div>
+          <div class="entry-message">${escapeHtml(e.message)}</div>
+        </div>
+      `).join("");
+      entriesSection.style.display = "block";
     }
 
     async function checkNetwork() {
       const network = await provider.getNetwork();
       if (network.chainId !== BASE_CHAIN_ID) {
-        networkWarning.innerHTML = `
-          <div class="warn-banner">
-            Wrong network. Switch to Base mainnet.
-            <button id="switch-btn">Switch</button>
-          </div>
-        `;
+        networkWarning.innerHTML = `<div class="warn-banner">Wrong network. Switch to Base mainnet. <button id="switch-btn">Switch</button></div>`;
         networkWarning.style.display = "block";
         document.getElementById("switch-btn").addEventListener("click", switchToBase);
         return false;
@@ -148,10 +187,7 @@
 
     async function switchToBase() {
       try {
-        await window.ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: BASE_CHAIN_HEX }],
-        });
+        await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_CHAIN_HEX }] });
       } catch (err) {
         if (err.code === 4902) {
           await window.ethereum.request({
@@ -184,7 +220,7 @@
         const ok = await checkNetwork();
         if (ok) {
           contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-          await loadStats();
+          await loadEntries();
         }
       } catch (err) {
         walletStatus.textContent = `Error: ${err.message}`;
