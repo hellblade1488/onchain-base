@@ -30,6 +30,7 @@
       background: var(--surface); border: 1px solid var(--border);
       border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;
     }
+    section h2 { margin-bottom: 1rem; font-size: 1.25rem; }
     button {
       background: var(--base-blue); color: white; border: none;
       padding: 0.75rem 1.5rem; border-radius: 8px;
@@ -55,6 +56,11 @@
       background: var(--warn); color: var(--bg);
       padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-left: 0.5rem;
     }
+    .stat {
+      font-size: 2.5rem; font-weight: 700;
+      color: var(--base-blue);
+    }
+    .stat-label { color: var(--text-dim); font-size: 0.875rem; }
     footer {
       padding: 1.5rem; text-align: center; border-top: 1px solid var(--border);
       color: var(--text-dim); font-size: 0.875rem;
@@ -73,6 +79,12 @@
       <p id="wallet-status">Not connected</p>
       <div id="network-warning" style="display: none;"></div>
     </section>
+
+    <section id="stats-section" style="display: none;">
+      <h2>Stats</h2>
+      <div class="stat" id="total-entries">—</div>
+      <div class="stat-label">Total messages signed</div>
+    </section>
   </main>
 
   <footer>
@@ -82,7 +94,6 @@
   <script type="module">
     import { BrowserProvider, Contract } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
 
-    // GuestBook contract on Base mainnet
     const CONTRACT_ADDRESS = "0x701546B92991CAC01f98c9aaB3AB8C8dd6d1999f";
     const CONTRACT_ABI = [
       "function sign(string calldata _message) external",
@@ -97,6 +108,8 @@
     const connectBtn = document.getElementById("connect-btn");
     const walletStatus = document.getElementById("wallet-status");
     const networkWarning = document.getElementById("network-warning");
+    const statsSection = document.getElementById("stats-section");
+    const totalEntriesEl = document.getElementById("total-entries");
 
     let provider = null;
     let signer = null;
@@ -104,6 +117,16 @@
 
     function shortenAddress(addr) {
       return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+    }
+
+    async function loadStats() {
+      try {
+        const total = await contract.totalEntries();
+        totalEntriesEl.textContent = total.toString();
+        statsSection.style.display = "block";
+      } catch (err) {
+        console.error("Failed to load stats:", err);
+      }
     }
 
     async function checkNetwork() {
@@ -161,7 +184,7 @@
         const ok = await checkNetwork();
         if (ok) {
           contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-          console.log("Contract ready:", contract);
+          await loadStats();
         }
       } catch (err) {
         walletStatus.textContent = `Error: ${err.message}`;
