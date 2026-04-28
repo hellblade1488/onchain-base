@@ -7,14 +7,10 @@
   <title>Base GuestBook</title>
   <style>
     :root {
-      --base-blue: #0052ff;
-      --base-blue-dark: #003ecc;
-      --bg: #0a0a0f;
-      --surface: #14141c;
-      --text: #f5f5fa;
-      --text-dim: #8a8a99;
-      --border: #2a2a3a;
-      --warn: #ff9d00;
+      --base-blue: #0052ff; --base-blue-dark: #003ecc;
+      --bg: #0a0a0f; --surface: #14141c;
+      --text: #f5f5fa; --text-dim: #8a8a99;
+      --border: #2a2a3a; --warn: #ff9d00;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -46,24 +42,18 @@
       font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9rem;
     }
     .addr {
-      color: var(--text);
-      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      color: var(--text); font-family: ui-monospace, "SF Mono", Menlo, monospace;
       background: var(--bg); padding: 0.15rem 0.5rem;
       border-radius: 4px; border: 1px solid var(--border);
     }
     .warn-banner {
-      background: rgba(255, 157, 0, 0.1);
-      border: 1px solid var(--warn);
-      color: var(--warn);
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      margin-top: 1rem;
-      font-size: 0.9rem;
+      background: rgba(255, 157, 0, 0.1); border: 1px solid var(--warn);
+      color: var(--warn); padding: 0.75rem 1rem; border-radius: 8px;
+      margin-top: 1rem; font-size: 0.9rem;
     }
     .warn-banner button {
       background: var(--warn); color: var(--bg);
-      padding: 0.4rem 0.8rem; font-size: 0.85rem;
-      margin-left: 0.5rem;
+      padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-left: 0.5rem;
     }
     footer {
       padding: 1.5rem; text-align: center; border-top: 1px solid var(--border);
@@ -90,7 +80,16 @@
   </footer>
 
   <script type="module">
-    import { BrowserProvider } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
+    import { BrowserProvider, Contract } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
+
+    // GuestBook contract on Base mainnet
+    const CONTRACT_ADDRESS = "0x701546B92991CAC01f98c9aaB3AB8C8dd6d1999f";
+    const CONTRACT_ABI = [
+      "function sign(string calldata _message) external",
+      "function getEntry(uint256 _id) external view returns (address, string memory, uint256)",
+      "function totalEntries() external view returns (uint256)",
+      "event MessageSigned(address indexed author, string message, uint256 timestamp, uint256 indexed entryId)"
+    ];
 
     const BASE_CHAIN_ID = 8453n;
     const BASE_CHAIN_HEX = "0x2105";
@@ -101,6 +100,7 @@
 
     let provider = null;
     let signer = null;
+    let contract = null;
 
     function shortenAddress(addr) {
       return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
@@ -111,7 +111,7 @@
       if (network.chainId !== BASE_CHAIN_ID) {
         networkWarning.innerHTML = `
           <div class="warn-banner">
-            Wrong network (${network.name}). Switch to Base mainnet.
+            Wrong network. Switch to Base mainnet.
             <button id="switch-btn">Switch</button>
           </div>
         `;
@@ -134,8 +134,7 @@
           await window.ethereum.request({
             method: "wallet_addEthereumChain",
             params: [{
-              chainId: BASE_CHAIN_HEX,
-              chainName: "Base",
+              chainId: BASE_CHAIN_HEX, chainName: "Base",
               nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
               rpcUrls: ["https://mainnet.base.org"],
               blockExplorerUrls: ["https://basescan.org"],
@@ -158,7 +157,12 @@
         walletStatus.innerHTML = `Connected: <span class="addr">${shortenAddress(address)}</span>`;
         connectBtn.textContent = "Connected";
         connectBtn.disabled = true;
-        await checkNetwork();
+
+        const ok = await checkNetwork();
+        if (ok) {
+          contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+          console.log("Contract ready:", contract);
+        }
       } catch (err) {
         walletStatus.textContent = `Error: ${err.message}`;
       }
