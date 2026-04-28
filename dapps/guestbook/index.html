@@ -10,7 +10,7 @@
       --base-blue: #0052ff; --base-blue-dark: #003ecc;
       --bg: #0a0a0f; --surface: #14141c; --surface-2: #1a1a26;
       --text: #f5f5fa; --text-dim: #8a8a99;
-      --border: #2a2a3a; --warn: #ff9d00; --error: #ff4d4d;
+      --border: #2a2a3a; --warn: #ff9d00; --error: #ff4d4d; --success: #2ecc71;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5; }
@@ -28,6 +28,9 @@
     .form-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
     .char-counter { color: var(--text-dim); font-size: 0.85rem; font-family: ui-monospace, monospace; }
     .char-counter.over { color: var(--error); }
+    .toast { padding: 0.75rem 1rem; border-radius: 8px; margin-top: 1rem; font-size: 0.9rem; }
+    .toast.success { background: rgba(46, 204, 113, 0.1); border: 1px solid var(--success); color: var(--success); }
+    .toast.error { background: rgba(255, 77, 77, 0.1); border: 1px solid var(--error); color: var(--error); }
     #wallet-status { margin-top: 1rem; color: var(--text-dim); font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9rem; }
     .addr { color: var(--text); font-family: ui-monospace, "SF Mono", Menlo, monospace; background: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; border: 1px solid var(--border); }
     .warn-banner { background: rgba(255, 157, 0, 0.1); border: 1px solid var(--warn); color: var(--warn); padding: 0.75rem 1rem; border-radius: 8px; margin-top: 1rem; font-size: 0.9rem; }
@@ -91,6 +94,7 @@
     const messageInput = document.getElementById("message-input");
     const signBtn = document.getElementById("sign-btn");
     const charCounter = document.getElementById("char-counter");
+    const txResult = document.getElementById("tx-result");
     const statsSection = document.getElementById("stats-section");
     const totalEntriesEl = document.getElementById("total-entries");
     const entriesSection = document.getElementById("entries-section");
@@ -108,11 +112,30 @@
       if (d<2592000) return `${Math.floor(d/86400)}d ago`;
       return `${Math.floor(d/31536000)}y ago`;
     }
+    function showToast(kind, html) { txResult.innerHTML = `<div class="toast ${kind}">${html}</div>`; }
     function updateCounter() {
       const len = messageInput.value.length;
       charCounter.textContent = `${len} / ${MAX_MESSAGE_LENGTH}`;
       charCounter.classList.toggle("over", len > MAX_MESSAGE_LENGTH);
       signBtn.disabled = len === 0 || len > MAX_MESSAGE_LENGTH;
+    }
+
+    async function signGuestbook() {
+      const message = messageInput.value.trim();
+      if (!message) return;
+      signBtn.disabled = true;
+      try {
+        const tx = await contract.sign(message);
+        await tx.wait();
+        showToast("success", "Signed!");
+        messageInput.value = "";
+        updateCounter();
+        await loadEntries();
+      } catch (err) {
+        showToast("error", `Failed: ${err.shortMessage || err.message}`);
+      } finally {
+        updateCounter();
+      }
     }
 
     async function loadEntries() {
@@ -195,6 +218,7 @@
 
     connectBtn.addEventListener("click", connectWallet);
     messageInput.addEventListener("input", updateCounter);
+    signBtn.addEventListener("click", signGuestbook);
     updateCounter();
     if (window.ethereum) {
       window.ethereum.on("chainChanged", () => window.location.reload());
