@@ -13,90 +13,44 @@
       --border: #2a2a3a; --warn: #ff9d00; --error: #ff4d4d;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg); color: var(--text);
-      min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5; }
     header { padding: 2rem 1rem; text-align: center; border-bottom: 1px solid var(--border); }
-    header h1 {
-      font-size: 2.5rem; margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, var(--base-blue), #5b8eff);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    }
+    header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--base-blue), #5b8eff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     header p { color: var(--text-dim); }
     main { flex: 1; max-width: 720px; width: 100%; margin: 0 auto; padding: 2rem 1rem; }
-    section {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;
-    }
+    section { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; }
     section h2 { margin-bottom: 1rem; font-size: 1.25rem; }
-    button {
-      background: var(--base-blue); color: white; border: none;
-      padding: 0.75rem 1.5rem; border-radius: 8px;
-      font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.15s;
-    }
+    button { background: var(--base-blue); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
     button:hover:not(:disabled) { background: var(--base-blue-dark); }
     button:disabled { background: var(--border); cursor: not-allowed; opacity: 0.6; }
-    textarea {
-      width: 100%; min-height: 80px;
-      background: var(--surface-2); color: var(--text);
-      border: 1px solid var(--border); border-radius: 8px;
-      padding: 0.75rem; font-family: inherit; font-size: 1rem;
-      resize: vertical; margin-bottom: 0.5rem;
-    }
+    textarea { width: 100%; min-height: 80px; background: var(--surface-2); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; font-family: inherit; font-size: 1rem; resize: vertical; margin-bottom: 0.5rem; }
     textarea:focus { outline: none; border-color: var(--base-blue); }
     .form-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
     .char-counter { color: var(--text-dim); font-size: 0.85rem; font-family: ui-monospace, monospace; }
     .char-counter.over { color: var(--error); }
-    #wallet-status {
-      margin-top: 1rem; color: var(--text-dim);
-      font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9rem;
-    }
-    .addr {
-      color: var(--text); font-family: ui-monospace, "SF Mono", Menlo, monospace;
-      background: var(--bg); padding: 0.15rem 0.5rem;
-      border-radius: 4px; border: 1px solid var(--border);
-    }
-    .warn-banner {
-      background: rgba(255, 157, 0, 0.1); border: 1px solid var(--warn);
-      color: var(--warn); padding: 0.75rem 1rem; border-radius: 8px;
-      margin-top: 1rem; font-size: 0.9rem;
-    }
-    .warn-banner button {
-      background: var(--warn); color: var(--bg);
-      padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-left: 0.5rem;
-    }
+    #wallet-status { margin-top: 1rem; color: var(--text-dim); font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9rem; }
+    .addr { color: var(--text); font-family: ui-monospace, "SF Mono", Menlo, monospace; background: var(--bg); padding: 0.15rem 0.5rem; border-radius: 4px; border: 1px solid var(--border); }
+    .warn-banner { background: rgba(255, 157, 0, 0.1); border: 1px solid var(--warn); color: var(--warn); padding: 0.75rem 1rem; border-radius: 8px; margin-top: 1rem; font-size: 0.9rem; }
+    .warn-banner button { background: var(--warn); color: var(--bg); padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-left: 0.5rem; }
     .stat { font-size: 2.5rem; font-weight: 700; color: var(--base-blue); }
     .stat-label { color: var(--text-dim); font-size: 0.875rem; }
     .entry { border-bottom: 1px solid var(--border); padding: 1rem 0; }
     .entry:last-child { border-bottom: none; }
-    .entry-header {
-      display: flex; justify-content: space-between;
-      margin-bottom: 0.5rem; font-size: 0.85rem;
-    }
+    .entry-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.85rem; }
     .entry-author { color: var(--base-blue); font-family: ui-monospace, "SF Mono", Menlo, monospace; }
     .entry-time { color: var(--text-dim); }
     .entry-message { color: var(--text); white-space: pre-wrap; word-break: break-word; }
-    footer {
-      padding: 1.5rem; text-align: center; border-top: 1px solid var(--border);
-      color: var(--text-dim); font-size: 0.875rem;
-    }
+    footer { padding: 1.5rem; text-align: center; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 0.875rem; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Base GuestBook</h1>
-    <p>An on-chain guestbook on the Base network.</p>
-  </header>
-
+  <header><h1>Base GuestBook</h1><p>An on-chain guestbook on the Base network.</p></header>
   <main>
     <section id="wallet-section">
       <button id="connect-btn">Connect Wallet</button>
       <p id="wallet-status">Not connected</p>
       <div id="network-warning" style="display: none;"></div>
     </section>
-
     <section id="sign-section" style="display: none;">
       <h2>Sign the guestbook</h2>
       <textarea id="message-input" placeholder="Leave a message…" maxlength="280"></textarea>
@@ -106,24 +60,19 @@
       </div>
       <div id="tx-result"></div>
     </section>
-
     <section id="stats-section" style="display: none;">
       <h2>Stats</h2>
       <div class="stat" id="total-entries">—</div>
       <div class="stat-label">Total messages signed</div>
     </section>
-
     <section id="entries-section" style="display: none;">
       <h2>Recent entries</h2>
       <div id="entries-list">Loading…</div>
     </section>
   </main>
-
   <footer><p>Powered by Base.</p></footer>
-
   <script type="module">
     import { BrowserProvider, Contract } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
-
     const CONTRACT_ADDRESS = "0x701546B92991CAC01f98c9aaB3AB8C8dd6d1999f";
     const CONTRACT_ABI = [
       "function sign(string calldata _message) external",
@@ -138,6 +87,7 @@
     const connectBtn = document.getElementById("connect-btn");
     const walletStatus = document.getElementById("wallet-status");
     const networkWarning = document.getElementById("network-warning");
+    const signSection = document.getElementById("sign-section");
     const messageInput = document.getElementById("message-input");
     const signBtn = document.getElementById("sign-btn");
     const charCounter = document.getElementById("char-counter");
@@ -148,19 +98,16 @@
 
     let provider = null, signer = null, contract = null;
 
-    function shortenAddress(addr) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
-    function escapeHtml(s) {
-      return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+    function shortenAddress(a) { return `${a.slice(0,6)}…${a.slice(-4)}`; }
+    function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+    function relativeTime(t) {
+      const d = Math.floor(Date.now()/1000) - t;
+      if (d<60) return `${d}s ago`;
+      if (d<3600) return `${Math.floor(d/60)}m ago`;
+      if (d<86400) return `${Math.floor(d/3600)}h ago`;
+      if (d<2592000) return `${Math.floor(d/86400)}d ago`;
+      return `${Math.floor(d/31536000)}y ago`;
     }
-    function relativeTime(unixSec) {
-      const diff = Math.floor(Date.now() / 1000) - unixSec;
-      if (diff < 60) return `${diff}s ago`;
-      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-      if (diff < 2592000) return `${Math.floor(diff / 86400)}d ago`;
-      return `${Math.floor(diff / 31536000)}y ago`;
-    }
-
     function updateCounter() {
       const len = messageInput.value.length;
       charCounter.textContent = `${len} / ${MAX_MESSAGE_LENGTH}`;
@@ -177,9 +124,7 @@
         entriesSection.style.display = "block";
         return;
       }
-      const count = Number(total);
-      const limit = Math.min(count, 10);
-      const start = count - limit;
+      const count = Number(total), limit = Math.min(count, 10), start = count - limit;
       const entries = [];
       for (let i = count - 1; i >= start; i--) {
         const [author, message, timestamp] = await contract.getEntry(i);
@@ -189,7 +134,7 @@
         <div class="entry">
           <div class="entry-header">
             <span class="entry-author">${shortenAddress(e.author)}</span>
-            <span class="entry-time" title="${new Date(e.timestamp * 1000).toLocaleString()}">${relativeTime(e.timestamp)}</span>
+            <span class="entry-time" title="${new Date(e.timestamp*1000).toLocaleString()}">${relativeTime(e.timestamp)}</span>
           </div>
           <div class="entry-message">${escapeHtml(e.message)}</div>
         </div>
@@ -240,6 +185,7 @@
         const ok = await checkNetwork();
         if (ok) {
           contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+          signSection.style.display = "block";
           await loadEntries();
         }
       } catch (err) {
@@ -250,7 +196,6 @@
     connectBtn.addEventListener("click", connectWallet);
     messageInput.addEventListener("input", updateCounter);
     updateCounter();
-
     if (window.ethereum) {
       window.ethereum.on("chainChanged", () => window.location.reload());
       window.ethereum.on("accountsChanged", () => window.location.reload());
