@@ -44,6 +44,14 @@
       margin-top: 1rem; color: var(--text-dim);
       font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9rem;
     }
+    .addr {
+      color: var(--text);
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      background: var(--bg);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
     footer {
       padding: 1.5rem; text-align: center; border-top: 1px solid var(--border);
       color: var(--text-dim); font-size: 0.875rem;
@@ -76,6 +84,10 @@
     let provider = null;
     let signer = null;
 
+    function shortenAddress(addr) {
+      return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+    }
+
     async function connectWallet() {
       if (!window.ethereum) {
         walletStatus.textContent = "No wallet detected. Install MetaMask or Rabby.";
@@ -87,7 +99,7 @@
         await provider.send("eth_requestAccounts", []);
         signer = await provider.getSigner();
         const address = await signer.getAddress();
-        walletStatus.textContent = `Connected: ${address}`;
+        walletStatus.innerHTML = `Connected: <span class="addr">${shortenAddress(address)}</span>`;
         connectBtn.textContent = "Connected";
         connectBtn.disabled = true;
       } catch (err) {
