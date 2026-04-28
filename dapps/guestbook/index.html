@@ -43,6 +43,7 @@
     .entry:last-child { border-bottom: none; }
     .entry-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.85rem; }
     .entry-author { color: var(--base-blue); font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+    .entry-author:hover { text-decoration: underline; }
     .entry-time { color: var(--text-dim); }
     .entry-message { color: var(--text); white-space: pre-wrap; word-break: break-word; }
     footer { padding: 1.5rem; text-align: center; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 0.875rem; }
@@ -89,6 +90,7 @@
     const BASE_CHAIN_HEX = "0x2105";
     const MAX_MESSAGE_LENGTH = 280;
     const BASESCAN_TX = "https://basescan.org/tx/";
+    const BASESCAN_ADDR = "https://basescan.org/address/";
 
     const connectBtn = document.getElementById("connect-btn");
     const walletStatus = document.getElementById("wallet-status");
@@ -164,7 +166,7 @@
       entriesList.innerHTML = entries.map(e => `
         <div class="entry">
           <div class="entry-header">
-            <span class="entry-author">${shortenAddress(e.author)}</span>
+            <a class="entry-author" href="${BASESCAN_ADDR}${e.author}" target="_blank" rel="noopener" title="${e.author}">${shortenAddress(e.author)}</a>
             <span class="entry-time" title="${new Date(e.timestamp*1000).toLocaleString()}">${relativeTime(e.timestamp)}</span>
           </div>
           <div class="entry-message">${escapeHtml(e.message)}</div>
@@ -192,12 +194,7 @@
         if (err.code === 4902) {
           await window.ethereum.request({
             method: "wallet_addEthereumChain",
-            params: [{
-              chainId: BASE_CHAIN_HEX, chainName: "Base",
-              nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-              rpcUrls: ["https://mainnet.base.org"],
-              blockExplorerUrls: ["https://basescan.org"],
-            }],
+            params: [{ chainId: BASE_CHAIN_HEX, chainName: "Base", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: ["https://mainnet.base.org"], blockExplorerUrls: ["https://basescan.org"] }],
           });
         }
       }
