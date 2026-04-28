@@ -23,6 +23,9 @@
       min-height: 100vh;
       line-height: 1.5;
     }
+    a { color: var(--base-blue-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
     .topbar {
       display: flex; justify-content: space-between; align-items: center;
       padding: 1.25rem 2rem;
@@ -43,8 +46,45 @@
       transition: transform 0.1s, background 0.15s; font-family: inherit;
     }
     button:hover { background: var(--base-blue-dark); transform: translateY(-1px); }
-    section { padding: 1.5rem 2rem; }
-    h1 { font-size: 3rem; font-weight: 800; }
+
+    .hero {
+      text-align: center;
+      padding: 4rem 2rem 2rem;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #ffffff 0%, var(--base-blue-light) 50%, var(--base-blue) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.05;
+      margin-bottom: 1rem;
+    }
+    .hero p {
+      color: var(--text-dim); font-size: 1.1rem;
+      max-width: 480px; margin: 0 auto;
+    }
+    .hero .recipient {
+      margin-top: 1rem;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.4rem 0.9rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-family: ui-monospace, monospace;
+      color: var(--text-dim);
+    }
+
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 1.5rem 4rem;
+    }
+    section { padding: 1.5rem; }
     h2 { font-size: 1.05rem; margin-bottom: 1rem; }
     footer { padding: 2rem; text-align: center; color: var(--text-dim); border-top: 1px solid var(--border); }
   </style>
@@ -60,30 +100,29 @@
     </div>
   </header>
 
-  <section>
+  <section class="hero">
     <h1>Hellblade Donation</h1>
-    <p>Send ETH on Base to support my work.</p>
+    <p>Send ETH on Base to support my work. Every tip is on chain — public, immutable, transparent.</p>
+    <div class="recipient">
+      To: <a href="https://basescan.org/address/0xF413aBfeD0e02D7A92EF6BEC44b9D8Cb9EE58c70" target="_blank" rel="noopener">0xF413…58C70</a>
+    </div>
   </section>
 
   <main>
     <section>
       <h2>Send a tip</h2>
-      <p>Amount and note inputs go here.</p>
+      <p>Form goes here.</p>
     </section>
-
     <section>
       <h2>Stats</h2>
-      <p>Stats grid goes here.</p>
+      <p>Stats go here.</p>
     </section>
-
     <section>
       <h2>Recent tips</h2>
-      <p>List of tips goes here.</p>
+      <p>List goes here.</p>
     </section>
   </main>
 
-  <footer>
-    <p>Powered by Base.</p>
-  </footer>
+  <footer><p>Powered by Base.</p></footer>
 </body>
 </html>
