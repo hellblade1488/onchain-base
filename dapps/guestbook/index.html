@@ -7,6 +7,7 @@
   <title>Base GuestBook</title>
   <style>
     :root {
+      --surface-2: #1a1a26;
       --base-blue: #0052ff; --base-blue-dark: #003ecc;
       --bg: #0a0a0f; --surface: #14141c;
       --text: #f5f5fa; --text-dim: #8a8a99;
@@ -74,6 +75,16 @@
       padding: 1.5rem; text-align: center; border-top: 1px solid var(--border);
       color: var(--text-dim); font-size: 0.875rem;
     }
+    textarea {
+      width: 100%; min-height: 80px;
+      background: var(--surface-2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 0.75rem; font-family: inherit; font-size: 1rem;
+      resize: vertical; margin-bottom: 0.5rem;
+    }
+    textarea:focus { outline: none; border-color: var(--base-blue); }
+    .form-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    .char-counter { color: var(--text-dim); font-size: 0.85rem; font-family: ui-monospace, monospace; }
   </style>
 </head>
 <body>
@@ -84,6 +95,15 @@
 
   <main>
     <section id="wallet-section">
+      <section id="sign-section" style="display: none;">
+      <h2>Sign the guestbook</h2>
+      <textarea id="message-input" placeholder="Leave a message…" maxlength="280"></textarea>
+      <div class="form-row">
+        <span class="char-counter" id="char-counter">0 / 280</span>
+        <button id="sign-btn">Sign on chain</button>
+      </div>
+      <div id="tx-result"></div>
+    </section>
       <button id="connect-btn">Connect Wallet</button>
       <p id="wallet-status">Not connected</p>
       <div id="network-warning" style="display: none;"></div>
