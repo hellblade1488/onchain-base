@@ -14,6 +14,8 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5; }
+    a { color: var(--base-blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
     header { padding: 2rem 1rem; text-align: center; border-bottom: 1px solid var(--border); }
     header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--base-blue), #5b8eff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     header p { color: var(--text-dim); }
@@ -86,6 +88,7 @@
     const BASE_CHAIN_ID = 8453n;
     const BASE_CHAIN_HEX = "0x2105";
     const MAX_MESSAGE_LENGTH = 280;
+    const BASESCAN_TX = "https://basescan.org/tx/";
 
     const connectBtn = document.getElementById("connect-btn");
     const walletStatus = document.getElementById("wallet-status");
@@ -129,8 +132,9 @@
       try {
         const tx = await contract.sign(message);
         signBtn.textContent = "Waiting for confirmation…";
+        showToast("success", `Transaction sent: <a href="${BASESCAN_TX}${tx.hash}" target="_blank" rel="noopener">${tx.hash.slice(0,10)}…</a>`);
         await tx.wait();
-        showToast("success", "Signed!");
+        showToast("success", `Signed! Tx: <a href="${BASESCAN_TX}${tx.hash}" target="_blank" rel="noopener">${tx.hash.slice(0,10)}…</a>`);
         messageInput.value = "";
         updateCounter();
         await loadEntries();
