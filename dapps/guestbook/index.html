@@ -4,82 +4,263 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Base GuestBook</title>
+  <meta name="description" content="An on-chain guestbook on the Base network. Sign a public, immutable message stored forever in a smart contract on Base." />
+
+  <meta property="og:title" content="Base GuestBook — sign on chain" />
+  <meta property="og:description" content="Leave an immutable message on the Base network." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%230052ff%22/><text x=%2250%22 y=%2270%22 font-size=%2260%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22 font-weight=%22bold%22>G</text></svg>" />
+
+  <title>Base GuestBook — sign on chain</title>
+
   <style>
     :root {
-      --base-blue: #0052ff; --base-blue-dark: #003ecc;
-      --bg: #0a0a0f; --surface: #14141c;
-      --text: #f5f5fa; --text-dim: #8a8a99;
-      --border: #2a2a3a; --warn: #ff9d00;
+      --base-blue: #0052ff;
+      --base-blue-dark: #003ecc;
+      --bg: #0a0a0f;
+      --surface: #14141c;
+      --surface-2: #1a1a26;
+      --text: #f5f5fa;
+      --text-dim: #8a8a99;
+      --border: #2a2a3a;
+      --warn: #ff9d00;
+      --error: #ff4d4d;
+      --success: #2ecc71;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg); color: var(--text);
-      min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
     }
-    header { padding: 2rem 1rem; text-align: center; border-bottom: 1px solid var(--border); }
+
+    a { color: var(--base-blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    header {
+      padding: 2rem 1rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
     header h1 {
-      font-size: 2.5rem; margin-bottom: 0.5rem;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
       background: linear-gradient(135deg, var(--base-blue), #5b8eff);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
+
     header p { color: var(--text-dim); }
-    main { flex: 1; max-width: 720px; width: 100%; margin: 0 auto; padding: 2rem 1rem; }
+
+    main {
+      flex: 1;
+      max-width: 720px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
     section {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
     }
-    section h2 { margin-bottom: 1rem; font-size: 1.25rem; }
+
+    section h2 {
+      margin-bottom: 1rem;
+      font-size: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .badge {
+      background: var(--base-blue);
+      color: white;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
     button {
-      background: var(--base-blue); color: white; border: none;
-      padding: 0.75rem 1.5rem; border-radius: 8px;
-      font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.15s;
+      background: var(--base-blue);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
     }
-    button:hover { background: var(--base-blue-dark); }
-    button:disabled { background: var(--border); cursor: not-allowed; }
+
+    button:hover:not(:disabled) { background: var(--base-blue-dark); }
+    button:disabled { background: var(--border); cursor: not-allowed; opacity: 0.6; }
+
+    textarea {
+      width: 100%;
+      min-height: 80px;
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-family: inherit;
+      font-size: 1rem;
+      resize: vertical;
+      margin-bottom: 0.5rem;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--base-blue);
+    }
+
+    .form-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .char-counter {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    }
+
+    .char-counter.over { color: var(--error); }
+
     #wallet-status {
-      margin-top: 1rem; color: var(--text-dim);
-      font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9rem;
+      margin-top: 1rem;
+      color: var(--text-dim);
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 0.9rem;
     }
+
     .addr {
-      color: var(--text); font-family: ui-monospace, "SF Mono", Menlo, monospace;
-      background: var(--bg); padding: 0.15rem 0.5rem;
-      border-radius: 4px; border: 1px solid var(--border);
+      color: var(--text);
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      background: var(--bg);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
     }
+
     .warn-banner {
-      background: rgba(255, 157, 0, 0.1); border: 1px solid var(--warn);
-      color: var(--warn); padding: 0.75rem 1rem; border-radius: 8px;
-      margin-top: 1rem; font-size: 0.9rem;
+      background: rgba(255, 157, 0, 0.1);
+      border: 1px solid var(--warn);
+      color: var(--warn);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
+
     .warn-banner button {
-      background: var(--warn); color: var(--bg);
-      padding: 0.4rem 0.8rem; font-size: 0.85rem; margin-left: 0.5rem;
+      background: var(--warn);
+      color: var(--bg);
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
     }
-    .stat { font-size: 2.5rem; font-weight: 700; color: var(--base-blue); }
+
+    .toast {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+    .toast.success {
+      background: rgba(46, 204, 113, 0.1);
+      border: 1px solid var(--success);
+      color: var(--success);
+    }
+    .toast.error {
+      background: rgba(255, 77, 77, 0.1);
+      border: 1px solid var(--error);
+      color: var(--error);
+    }
+
+    .stat {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--base-blue);
+    }
     .stat-label { color: var(--text-dim); font-size: 0.875rem; }
-    .entry { border-bottom: 1px solid var(--border); padding: 1rem 0; }
-    .entry:last-child { border-bottom: none; }
-    .entry-header {
-      display: flex; justify-content: space-between;
-      margin-bottom: 0.5rem; font-size: 0.85rem;
+
+    .entry {
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 0;
     }
+    .entry:first-child { padding-top: 0; }
+    .entry:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .entry-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+    }
+
     .entry-author {
       color: var(--base-blue);
       font-family: ui-monospace, "SF Mono", Menlo, monospace;
     }
+    .entry-author:hover { text-decoration: underline; }
+
     .entry-time { color: var(--text-dim); }
-    .entry-message { color: var(--text); white-space: pre-wrap; word-break: break-word; }
+
+    .entry-message {
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .empty-state {
+      color: var(--text-dim);
+      text-align: center;
+      padding: 1.5rem 0;
+    }
+
     footer {
-      padding: 1.5rem; text-align: center; border-top: 1px solid var(--border);
-      color: var(--text-dim); font-size: 0.875rem;
+      padding: 1.5rem;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 0.875rem;
+    }
+
+    footer a { color: var(--text-dim); }
+    footer .footer-links { margin-top: 0.5rem; }
+    footer .footer-links a { margin: 0 0.5rem; }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.8rem; }
+      main { padding: 1rem; }
+      section { padding: 1rem; }
     }
   </style>
 </head>
 <body>
   <header>
     <h1>Base GuestBook</h1>
-    <p>An on-chain guestbook on the Base network.</p>
+    <p>An immutable, on-chain guestbook on the Base network.</p>
   </header>
 
   <main>
@@ -89,8 +270,21 @@
       <div id="network-warning" style="display: none;"></div>
     </section>
 
+    <section id="sign-section" style="display: none;">
+      <h2>Sign the guestbook</h2>
+      <textarea id="message-input" placeholder="Leave a message…" maxlength="280"></textarea>
+      <div class="form-row">
+        <span class="char-counter" id="char-counter">0 / 280</span>
+        <button id="sign-btn">Sign on chain</button>
+      </div>
+      <div id="tx-result"></div>
+    </section>
+
     <section id="stats-section" style="display: none;">
-      <h2>Stats</h2>
+      <h2>
+        <span>Stats</span>
+        <span class="badge">live</span>
+      </h2>
       <div class="stat" id="total-entries">—</div>
       <div class="stat-label">Total messages signed</div>
     </section>
@@ -102,12 +296,17 @@
   </main>
 
   <footer>
-    <p>Powered by Base.</p>
+    <p>Powered by Base · contract on
+      <a href="https://basescan.org/address/0x701546B92991CAC01f98c9aaB3AB8C8dd6d1999f" target="_blank" rel="noopener">BaseScan</a></p>
+    <p class="footer-links">
+      <a href="https://github.com/hellblade1488/onchain-base" target="_blank" rel="noopener">Source on GitHub</a>
+    </p>
   </footer>
 
   <script type="module">
     import { BrowserProvider, Contract } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
 
+    // ---------- Constants ----------
     const CONTRACT_ADDRESS = "0x701546B92991CAC01f98c9aaB3AB8C8dd6d1999f";
     const CONTRACT_ABI = [
       "function sign(string calldata _message) external",
@@ -117,10 +316,20 @@
     ];
     const BASE_CHAIN_ID = 8453n;
     const BASE_CHAIN_HEX = "0x2105";
+    const ENTRIES_TO_SHOW = 10;
+    const MAX_MESSAGE_LENGTH = 280;
+    const BASESCAN_TX = "https://basescan.org/tx/";
+    const BASESCAN_ADDR = "https://basescan.org/address/";
 
+    // ---------- DOM ----------
     const connectBtn = document.getElementById("connect-btn");
     const walletStatus = document.getElementById("wallet-status");
     const networkWarning = document.getElementById("network-warning");
+    const signSection = document.getElementById("sign-section");
+    const messageInput = document.getElementById("message-input");
+    const signBtn = document.getElementById("sign-btn");
+    const charCounter = document.getElementById("char-counter");
+    const txResult = document.getElementById("tx-result");
     const statsSection = document.getElementById("stats-section");
     const totalEntriesEl = document.getElementById("total-entries");
     const entriesSection = document.getElementById("entries-section");
@@ -128,7 +337,11 @@
 
     let provider = null, signer = null, contract = null;
 
-    function shortenAddress(addr) { return `${addr.slice(0, 6)}…${addr.slice(-4)}`; }
+    // ---------- Helpers ----------
+    function shortenAddress(addr) {
+      return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+    }
+
     function escapeHtml(s) {
       return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
     }
@@ -143,42 +356,29 @@
       return `${Math.floor(diff / 31536000)}y ago`;
     }
 
-    async function loadEntries() {
-      const total = await contract.totalEntries();
-      totalEntriesEl.textContent = total.toString();
-      statsSection.style.display = "block";
-
-      if (total === 0n) {
-        entriesList.innerHTML = "<p>No entries yet. Be the first to sign!</p>";
-        entriesSection.style.display = "block";
-        return;
-      }
-
-      const count = Number(total);
-      const limit = Math.min(count, 10);
-      const start = count - limit;
-      const entries = [];
-      for (let i = count - 1; i >= start; i--) {
-        const [author, message, timestamp] = await contract.getEntry(i);
-        entries.push({ id: i, author, message, timestamp: Number(timestamp) });
-      }
-
-      entriesList.innerHTML = entries.map(e => `
-        <div class="entry">
-          <div class="entry-header">
-            <span class="entry-author">${shortenAddress(e.author)}</span>
-            <span class="entry-time" title="${new Date(e.timestamp * 1000).toLocaleString()}">${relativeTime(e.timestamp)}</span>
-          </div>
-          <div class="entry-message">${escapeHtml(e.message)}</div>
-        </div>
-      `).join("");
-      entriesSection.style.display = "block";
+    function showToast(kind, html) {
+      txResult.innerHTML = `<div class="toast ${kind}">${html}</div>`;
     }
 
+    function clearToast() { txResult.innerHTML = ""; }
+
+    function updateCounter() {
+      const len = messageInput.value.length;
+      charCounter.textContent = `${len} / ${MAX_MESSAGE_LENGTH}`;
+      charCounter.classList.toggle("over", len > MAX_MESSAGE_LENGTH);
+      signBtn.disabled = len === 0 || len > MAX_MESSAGE_LENGTH;
+    }
+
+    // ---------- Network ----------
     async function checkNetwork() {
       const network = await provider.getNetwork();
       if (network.chainId !== BASE_CHAIN_ID) {
-        networkWarning.innerHTML = `<div class="warn-banner">Wrong network. Switch to Base mainnet. <button id="switch-btn">Switch</button></div>`;
+        networkWarning.innerHTML = `
+          <div class="warn-banner">
+            <span>Wrong network. Switch to Base mainnet to interact.</span>
+            <button id="switch-btn">Switch</button>
+          </div>
+        `;
         networkWarning.style.display = "block";
         document.getElementById("switch-btn").addEventListener("click", switchToBase);
         return false;
@@ -189,13 +389,17 @@
 
     async function switchToBase() {
       try {
-        await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_CHAIN_HEX }] });
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: BASE_CHAIN_HEX }],
+        });
       } catch (err) {
         if (err.code === 4902) {
           await window.ethereum.request({
             method: "wallet_addEthereumChain",
             params: [{
-              chainId: BASE_CHAIN_HEX, chainName: "Base",
+              chainId: BASE_CHAIN_HEX,
+              chainName: "Base",
               nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
               rpcUrls: ["https://mainnet.base.org"],
               blockExplorerUrls: ["https://basescan.org"],
@@ -205,6 +409,90 @@
       }
     }
 
+    // ---------- Read ----------
+    async function loadEntries() {
+      try {
+        const total = await contract.totalEntries();
+        totalEntriesEl.textContent = total.toString();
+        statsSection.style.display = "block";
+
+        if (total === 0n) {
+          entriesList.innerHTML = `<p class="empty-state">No entries yet. Be the first to sign!</p>`;
+          entriesSection.style.display = "block";
+          return;
+        }
+
+        const count = Number(total);
+        const limit = Math.min(count, ENTRIES_TO_SHOW);
+        const start = count - limit;
+        const entries = [];
+        for (let i = count - 1; i >= start; i--) {
+          const [author, message, timestamp] = await contract.getEntry(i);
+          entries.push({ id: i, author, message, timestamp: Number(timestamp) });
+        }
+
+        entriesList.innerHTML = entries.map(e => `
+          <div class="entry">
+            <div class="entry-header">
+              <a class="entry-author" href="${BASESCAN_ADDR}${e.author}" target="_blank" rel="noopener" title="${e.author}">${shortenAddress(e.author)}</a>
+              <span class="entry-time" title="${new Date(e.timestamp * 1000).toLocaleString()}">${relativeTime(e.timestamp)}</span>
+            </div>
+            <div class="entry-message">${escapeHtml(e.message)}</div>
+          </div>
+        `).join("");
+        entriesSection.style.display = "block";
+      } catch (err) {
+        console.error("loadEntries failed:", err);
+        entriesList.innerHTML = `<p class="empty-state">Failed to load entries: ${escapeHtml(err.message)}</p>`;
+        entriesSection.style.display = "block";
+      }
+    }
+
+    // ---------- Write ----------
+    async function signGuestbook() {
+      const message = messageInput.value.trim();
+      if (!message) {
+        showToast("error", "Message cannot be empty.");
+        return;
+      }
+      if (message.length > MAX_MESSAGE_LENGTH) {
+        showToast("error", `Message too long (max ${MAX_MESSAGE_LENGTH} chars).`);
+        return;
+      }
+
+      signBtn.disabled = true;
+      const originalText = signBtn.textContent;
+      signBtn.textContent = "Confirm in wallet…";
+      clearToast();
+
+      try {
+        const tx = await contract.sign(message);
+        signBtn.textContent = "Waiting for confirmation…";
+        showToast("success", `Transaction sent: <a href="${BASESCAN_TX}${tx.hash}" target="_blank" rel="noopener">${tx.hash.slice(0, 10)}…</a>`);
+
+        await tx.wait();
+        showToast("success", `Signed! Tx: <a href="${BASESCAN_TX}${tx.hash}" target="_blank" rel="noopener">${tx.hash.slice(0, 10)}…</a>`);
+        messageInput.value = "";
+        updateCounter();
+        await loadEntries();
+      } catch (err) {
+        const reason = err.shortMessage || err.message || String(err);
+        showToast("error", `Failed: ${escapeHtml(reason)}`);
+      } finally {
+        signBtn.textContent = originalText;
+        updateCounter();
+      }
+    }
+
+    // ---------- Live updates ----------
+    function listenForNewEntries() {
+      contract.on("MessageSigned", (author, message, timestamp, entryId) => {
+        console.log("New entry:", { author, message, entryId });
+        loadEntries();
+      });
+    }
+
+    // ---------- Connect ----------
     async function connectWallet() {
       if (!window.ethereum) {
         walletStatus.textContent = "No wallet detected. Install MetaMask or Rabby.";
@@ -215,20 +503,27 @@
         await provider.send("eth_requestAccounts", []);
         signer = await provider.getSigner();
         const address = await signer.getAddress();
-        walletStatus.innerHTML = `Connected: <span class="addr">${shortenAddress(address)}</span>`;
+        walletStatus.innerHTML = `Connected: <a href="${BASESCAN_ADDR}${address}" target="_blank" rel="noopener" class="addr">${shortenAddress(address)}</a>`;
         connectBtn.textContent = "Connected";
         connectBtn.disabled = true;
+
         const ok = await checkNetwork();
         if (ok) {
           contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+          signSection.style.display = "block";
           await loadEntries();
+          listenForNewEntries();
         }
       } catch (err) {
         walletStatus.textContent = `Error: ${err.message}`;
       }
     }
 
+    // ---------- Wire up ----------
     connectBtn.addEventListener("click", connectWallet);
+    messageInput.addEventListener("input", updateCounter);
+    signBtn.addEventListener("click", signGuestbook);
+    updateCounter();
 
     if (window.ethereum) {
       window.ethereum.on("chainChanged", () => window.location.reload());
