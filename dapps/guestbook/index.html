@@ -6,12 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Base GuestBook</title>
   <style>
-    :root {
-      --base-blue: #0052ff; --base-blue-dark: #003ecc;
-      --bg: #0a0a0f; --surface: #14141c; --surface-2: #1a1a26;
-      --text: #f5f5fa; --text-dim: #8a8a99;
-      --border: #2a2a3a; --warn: #ff9d00; --error: #ff4d4d; --success: #2ecc71;
-    }
+    :root { --base-blue: #0052ff; --base-blue-dark: #003ecc; --bg: #0a0a0f; --surface: #14141c; --surface-2: #1a1a26; --text: #f5f5fa; --text-dim: #8a8a99; --border: #2a2a3a; --warn: #ff9d00; --error: #ff4d4d; --success: #2ecc71; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; line-height: 1.5; }
     a { color: var(--base-blue); text-decoration: none; }
@@ -46,6 +41,7 @@
     .entry-author:hover { text-decoration: underline; }
     .entry-time { color: var(--text-dim); }
     .entry-message { color: var(--text); white-space: pre-wrap; word-break: break-word; }
+    .empty-state { color: var(--text-dim); text-align: center; padding: 1.5rem 0; }
     footer { padding: 1.5rem; text-align: center; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 0.875rem; }
   </style>
 </head>
@@ -80,12 +76,7 @@
   <script type="module">
     import { BrowserProvider, Contract } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
     const CONTRACT_ADDRESS = "0x701546B92991CAC01f98c9aaB3AB8C8dd6d1999f";
-    const CONTRACT_ABI = [
-      "function sign(string calldata _message) external",
-      "function getEntry(uint256 _id) external view returns (address, string memory, uint256)",
-      "function totalEntries() external view returns (uint256)",
-      "event MessageSigned(address indexed author, string message, uint256 timestamp, uint256 indexed entryId)"
-    ];
+    const CONTRACT_ABI = ["function sign(string calldata _message) external","function getEntry(uint256 _id) external view returns (address, string memory, uint256)","function totalEntries() external view returns (uint256)","event MessageSigned(address indexed author, string message, uint256 timestamp, uint256 indexed entryId)"];
     const BASE_CHAIN_ID = 8453n;
     const BASE_CHAIN_HEX = "0x2105";
     const MAX_MESSAGE_LENGTH = 280;
@@ -153,7 +144,7 @@
       totalEntriesEl.textContent = total.toString();
       statsSection.style.display = "block";
       if (total === 0n) {
-        entriesList.innerHTML = "<p>No entries yet.</p>";
+        entriesList.innerHTML = `<p class="empty-state">No entries yet. Be the first to sign!</p>`;
         entriesSection.style.display = "block";
         return;
       }
@@ -192,10 +183,7 @@
         await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_CHAIN_HEX }] });
       } catch (err) {
         if (err.code === 4902) {
-          await window.ethereum.request({
-            method: "wallet_addEthereumChain",
-            params: [{ chainId: BASE_CHAIN_HEX, chainName: "Base", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: ["https://mainnet.base.org"], blockExplorerUrls: ["https://basescan.org"] }],
-          });
+          await window.ethereum.request({ method: "wallet_addEthereumChain", params: [{ chainId: BASE_CHAIN_HEX, chainName: "Base", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: ["https://mainnet.base.org"], blockExplorerUrls: ["https://basescan.org"] }] });
         }
       }
     }
