@@ -2,8 +2,7 @@
 
 Experiments and tools for building on **Base** — Coinbase's Ethereum L2.
 
-This repo collects everything I've shipped on Base: smart contracts, a live dApp,
-and earlier prototypes.
+This repo collects everything I'm shipping on Base: smart contracts and a live dApp.
 
 ---
 
@@ -42,12 +41,6 @@ Five Solidity contracts deployed and verified on Base (chain id `8453`):
 - Contracts deployed via [Remix IDE](https://remix.ethereum.org)
 - Verified on [Sourcify](https://sourcify.dev) and viewable on [BaseScan](https://basescan.org)
 - dApp hosted free on **GitHub Pages**
-
----
-
-## 🎮 Past experiments
-
-- [**2048 game**](2048) — a small Vite-based 2048 clone. First experiment in this repo.
 
 ---
 
