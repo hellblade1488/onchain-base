@@ -116,6 +116,13 @@
       signBtn.disabled = len === 0 || len > MAX_MESSAGE_LENGTH;
     }
 
+    function listenForNewEntries() {
+      contract.on("MessageSigned", () => {
+        console.log("New MessageSigned event detected, reloading…");
+        loadEntries();
+      });
+    }
+
     async function signGuestbook() {
       const message = messageInput.value.trim();
       if (!message) return;
@@ -179,9 +186,8 @@
     }
 
     async function switchToBase() {
-      try {
-        await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_CHAIN_HEX }] });
-      } catch (err) {
+      try { await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_CHAIN_HEX }] }); }
+      catch (err) {
         if (err.code === 4902) {
           await window.ethereum.request({ method: "wallet_addEthereumChain", params: [{ chainId: BASE_CHAIN_HEX, chainName: "Base", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: ["https://mainnet.base.org"], blockExplorerUrls: ["https://basescan.org"] }] });
         }
@@ -203,10 +209,9 @@
           contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
           signSection.style.display = "block";
           await loadEntries();
+          listenForNewEntries();
         }
-      } catch (err) {
-        walletStatus.textContent = `Error: ${err.message}`;
-      }
+      } catch (err) { walletStatus.textContent = `Error: ${err.message}`; }
     }
 
     connectBtn.addEventListener("click", connectWallet);
