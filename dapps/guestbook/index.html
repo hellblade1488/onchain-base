@@ -6,12 +6,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Base GuestBook</title>
   <style>
+    
     :root {
       --surface-2: #1a1a26;
       --base-blue: #0052ff; --base-blue-dark: #003ecc;
       --bg: #0a0a0f; --surface: #14141c;
       --text: #f5f5fa; --text-dim: #8a8a99;
       --border: #2a2a3a; --warn: #ff9d00;
+      --error: #ff4d4d;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -85,6 +87,7 @@
     textarea:focus { outline: none; border-color: var(--base-blue); }
     .form-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
     .char-counter { color: var(--text-dim); font-size: 0.85rem; font-family: ui-monospace, monospace; }
+    .char-counter.over { color: var(--error); }
   </style>
 </head>
 <body>
@@ -254,6 +257,19 @@
       window.ethereum.on("chainChanged", () => window.location.reload());
       window.ethereum.on("accountsChanged", () => window.location.reload());
     }
+    const messageInput = document.getElementById("message-input");
+    const signBtn = document.getElementById("sign-btn");
+    const charCounter = document.getElementById("char-counter");
+    const MAX_MESSAGE_LENGTH = 280;
+
+    function updateCounter() {
+      charCounter.classList.toggle("over", len > MAX_MESSAGE_LENGTH);
+      const len = messageInput.value.length;
+      charCounter.textContent = `${len} / ${MAX_MESSAGE_LENGTH}`;
+      signBtn.disabled = len === 0 || len > MAX_MESSAGE_LENGTH;
+    }
+    messageInput.addEventListener("input", updateCounter);
+    updateCounter();
   </script>
 </body>
 </html>
