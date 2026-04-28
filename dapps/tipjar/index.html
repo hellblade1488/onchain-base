@@ -58,11 +58,11 @@
       display: flex; align-items: center; gap: 0.5rem;
       color: var(--text);
     }
-    .brand .bolt {
-      color: var(--base-blue);
-      font-size: 1.4rem;
+    .brand .bolt { color: var(--base-blue); font-size: 1.4rem; }
+    .wallet-area {
+      display: flex; align-items: center; gap: 0.5rem;
+      flex-wrap: wrap; justify-content: flex-end;
     }
-    .wallet-area { display: flex; align-items: center; gap: 0.75rem; }
 
     button {
       background: var(--base-blue); color: white; border: none;
@@ -78,21 +78,46 @@
     button:active:not(:disabled) { transform: translateY(0); }
     button:disabled { background: var(--border); cursor: not-allowed; opacity: 0.6; }
 
-    .btn-secondary {
-      background: var(--surface-2);
-      color: var(--text);
+    /* ---- Network pill ---- */
+    .net-pill {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.45rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.85rem; font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
       border: 1px solid var(--border);
     }
-    .btn-secondary:hover:not(:disabled) {
-      background: var(--surface);
+    .net-pill.ok {
+      background: rgba(0,82,255,0.12);
+      color: var(--base-blue-light);
+      border-color: rgba(0,82,255,0.4);
+    }
+    .net-pill.ok:hover { background: rgba(0,82,255,0.2); }
+    .net-pill.wrong {
+      background: rgba(255,157,0,0.12);
+      color: var(--warn);
+      border-color: rgba(255,157,0,0.5);
+    }
+    .net-pill.wrong:hover { background: rgba(255,157,0,0.2); }
+    .net-pill .net-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 6px currentColor;
     }
 
-    .addr-pill {
+    /* ---- Address pill with disconnect ---- */
+    .addr-group {
+      display: inline-flex; align-items: center;
       background: var(--surface-2);
       border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.5rem 1rem;
       border-radius: 999px;
+      overflow: hidden;
+    }
+    .addr-pill {
+      padding: 0.5rem 0.9rem;
+      color: var(--text);
       font-family: ui-monospace, "SF Mono", Menlo, monospace;
       font-size: 0.9rem;
       display: inline-flex; align-items: center; gap: 0.5rem;
@@ -102,6 +127,24 @@
       border-radius: 50%;
       background: var(--success);
       box-shadow: 0 0 8px var(--success);
+    }
+    .disconnect-btn {
+      background: transparent;
+      border: none;
+      border-left: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 0 0.7rem;
+      height: 100%;
+      align-self: stretch;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+      border-radius: 0;
+    }
+    .disconnect-btn:hover {
+      background: rgba(255,77,109,0.15);
+      color: var(--error);
+      transform: none;
     }
 
     /* ---- Hero ---- */
@@ -159,12 +202,10 @@
       font-size: 1.05rem;
       font-weight: 700;
       margin-bottom: 1rem;
-      color: var(--text);
       display: flex; align-items: center; justify-content: space-between;
     }
     .badge {
-      background: var(--base-blue);
-      color: white;
+      background: var(--base-blue); color: white;
       font-size: 0.7rem;
       padding: 0.2rem 0.6rem;
       border-radius: 999px;
@@ -250,6 +291,11 @@
       border-color: var(--error);
       color: var(--error);
     }
+    .toast.info {
+      background: rgba(91,142,255,0.1);
+      border-color: var(--base-blue-light);
+      color: var(--base-blue-light);
+    }
 
     /* ---- Stats grid ---- */
     .stats-grid {
@@ -321,9 +367,7 @@
       border: 1px solid var(--base-blue);
       background: linear-gradient(135deg, rgba(0,82,255,0.08), var(--surface));
     }
-    .owner-card h2 {
-      color: var(--base-blue-light);
-    }
+    .owner-card h2 { color: var(--base-blue-light); }
     .balance-display {
       font-size: 2rem;
       font-weight: 800;
@@ -362,7 +406,10 @@
     footer a { color: var(--text-dim); margin: 0 0.5rem; }
 
     @media (max-width: 600px) {
-      .topbar { padding: 1rem 1.25rem; }
+      .topbar { padding: 0.85rem 1rem; gap: 0.5rem; }
+      .brand { font-size: 0.95rem; }
+      .net-pill { padding: 0.4rem 0.6rem; font-size: 0.75rem; }
+      .addr-pill { padding: 0.4rem 0.7rem; font-size: 0.8rem; }
       .hero { padding: 2.5rem 1rem 1.5rem; }
       .stats-grid { grid-template-columns: 1fr; }
       .stat-cell { display: flex; justify-content: space-between; align-items: center; text-align: left; }
@@ -487,7 +534,6 @@
 
     // ---- DOM ----
     const $ = id => document.getElementById(id);
-    const connectBtn = $("connect-btn");
     const walletArea = $("wallet-area");
     const networkWarning = $("network-warning");
     const amountInput = $("amount-input");
@@ -506,6 +552,7 @@
 
     let provider = null, signer = null, contract = null;
     let userAddress = null, ownerAddress = null;
+    let currentChainId = null;
 
     // ---- Helpers ----
     function shortenAddress(a) { return `${a.slice(0, 6)}…${a.slice(-4)}`; }
@@ -521,6 +568,36 @@
     }
     function showToast(target, kind, html) {
       target.innerHTML = `<div class="toast ${kind}">${html}</div>`;
+    }
+    function networkName(chainId) {
+      const map = { 1n: "Ethereum", 8453n: "Base", 84532n: "Base Sepolia", 10n: "Optimism", 42161n: "Arbitrum", 137n: "Polygon" };
+      return map[chainId] || `Chain ${chainId}`;
+    }
+
+    // ---- Render top bar ----
+    function renderConnected(isBaseNetwork) {
+      const netClass = isBaseNetwork ? "ok" : "wrong";
+      const netLabel = isBaseNetwork ? "Base" : networkName(currentChainId);
+      walletArea.innerHTML = `
+        <button class="net-pill ${netClass}" id="net-pill" title="${isBaseNetwork ? 'Connected to Base' : 'Click to switch to Base'}">
+          <span class="net-dot"></span>
+          ${netLabel}
+        </button>
+        <div class="addr-group">
+          <span class="addr-pill">
+            <span class="dot"></span>
+            ${shortenAddress(userAddress)}
+          </span>
+          <button class="disconnect-btn" id="disconnect-btn" title="Disconnect">×</button>
+        </div>
+      `;
+      $("net-pill").addEventListener("click", switchToBase);
+      $("disconnect-btn").addEventListener("click", disconnectWallet);
+    }
+
+    function renderDisconnected() {
+      walletArea.innerHTML = `<button id="connect-btn">Connect Wallet</button>`;
+      $("connect-btn").addEventListener("click", connectWallet);
     }
 
     // ---- Tip button enable/disable ----
@@ -542,10 +619,11 @@
     // ---- Network ----
     async function checkNetwork() {
       const network = await provider.getNetwork();
+      currentChainId = network.chainId;
       if (network.chainId !== BASE_CHAIN_ID) {
         networkWarning.innerHTML = `
           <div class="warn-banner">
-            <span>You're on the wrong network. Switch to Base mainnet to interact.</span>
+            <span>You're on <b>${networkName(network.chainId)}</b>. Switch to Base mainnet to interact.</span>
             <button id="switch-btn">Switch to Base</button>
           </div>
         `;
@@ -570,6 +648,8 @@
               blockExplorerUrls: ["https://basescan.org"],
             }],
           });
+        } else if (err.code !== 4001) {
+          showToast(txResult, "error", `Failed to switch: ${escapeHtml(err.message)}`);
         }
       }
     }
@@ -691,10 +771,31 @@
 
     // ---- Live events ----
     function listenForTips() {
-      contract.on("NewTip", () => {
-        loadStats();
-        loadTips();
-      });
+      try {
+        contract.on("NewTip", () => {
+          loadStats();
+          loadTips();
+        });
+      } catch (e) { console.warn("Event subscription failed", e); }
+    }
+
+    // ---- Disconnect ----
+    function disconnectWallet() {
+      // Clear local state. Wallet itself remains authorized; user can revoke via wallet UI.
+      try { if (contract) contract.removeAllListeners(); } catch (e) {}
+      provider = null; signer = null; contract = null;
+      userAddress = null; ownerAddress = null; currentChainId = null;
+
+      renderDisconnected();
+      networkWarning.innerHTML = "";
+      ownerSection.style.display = "none";
+      totalTipsEl.textContent = "—";
+      tipCountEl.textContent = "—";
+      balanceEl.textContent = "—";
+      tipsList.innerHTML = `<p class="empty">Connect your wallet to load tips…</p>`;
+      tipBtn.disabled = true;
+      txResult.innerHTML = `<div class="toast info">Disconnected. Reconnect any time.</div>`;
+      setTimeout(() => { if (txResult.querySelector(".info")) txResult.innerHTML = ""; }, 3000);
     }
 
     // ---- Connect ----
@@ -709,13 +810,11 @@
         signer = await provider.getSigner();
         userAddress = await signer.getAddress();
 
-        // Replace connect button with address pill
-        walletArea.innerHTML = `
-          <span class="addr-pill">
-            <span class="dot"></span>
-            ${shortenAddress(userAddress)}
-          </span>
-        `;
+        const network = await provider.getNetwork();
+        currentChainId = network.chainId;
+        const isBase = network.chainId === BASE_CHAIN_ID;
+
+        renderConnected(isBase);
 
         const ok = await checkNetwork();
         if (!ok) return;
@@ -723,7 +822,6 @@
         contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
         ownerAddress = await contract.owner();
 
-        // Show owner section if connected wallet === owner
         if (userAddress.toLowerCase() === ownerAddress.toLowerCase()) {
           ownerSection.style.display = "block";
         }
@@ -734,12 +832,12 @@
         updateTipBtn();
       } catch (err) {
         console.error(err);
-        walletArea.innerHTML = `<button id="connect-btn">Connect Wallet</button>`;
-        $("connect-btn").addEventListener("click", connectWallet);
+        renderDisconnected();
       }
     }
 
-    connectBtn.addEventListener("click", connectWallet);
+    // ---- Init ----
+    renderDisconnected();
 
     if (window.ethereum) {
       window.ethereum.on("chainChanged", () => window.location.reload());
