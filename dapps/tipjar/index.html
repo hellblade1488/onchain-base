@@ -4,28 +4,47 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hellblade Donation</title>
+  <meta name="description" content="Send ETH on Base to support Hellblade. On-chain donations with public notes." />
+  <meta property="og:title" content="Hellblade Donation — tip me on Base" />
+  <meta property="og:description" content="Support my work with on-chain ETH tips on Base." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%230052ff%22/><text x=%2250%22 y=%2272%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22 font-weight=%22bold%22>⚡</text></svg>" />
+  <title>Hellblade Donation · tip on Base</title>
   <style>
     :root {
-      --base-blue: #0052ff; --base-blue-dark: #003ecc; --base-blue-light: #5b8eff;
-      --bg: #05060d; --bg-2: #0a0c18;
-      --surface: #11142a; --surface-2: #1a1d3a;
-      --text: #f5f5fa; --text-dim: #8a8aa0;
+      --base-blue: #0052ff;
+      --base-blue-dark: #003ecc;
+      --base-blue-light: #5b8eff;
+      --bg: #05060d;
+      --bg-2: #0a0c18;
+      --surface: #11142a;
+      --surface-2: #1a1d3a;
+      --text: #f5f5fa;
+      --text-dim: #8a8aa0;
       --border: #232845;
+      --warn: #ff9d00;
+      --error: #ff4d6d;
+      --success: #00d27a;
+      --radius: 14px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
       background:
         radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,82,255,0.18), transparent 70%),
+        radial-gradient(ellipse 60% 60% at 80% 100%, rgba(91,142,255,0.10), transparent 70%),
         var(--bg);
       color: var(--text);
       min-height: 100vh;
       line-height: 1.5;
     }
+
     a { color: var(--base-blue-light); text-decoration: none; }
     a:hover { text-decoration: underline; }
 
+    /* ---- Top bar ---- */
     .topbar {
       display: flex; justify-content: space-between; align-items: center;
       padding: 1.25rem 2rem;
@@ -37,16 +56,55 @@
     .brand {
       font-weight: 700; font-size: 1.1rem;
       display: flex; align-items: center; gap: 0.5rem;
+      color: var(--text);
     }
-    .brand .bolt { color: var(--base-blue); font-size: 1.4rem; }
+    .brand .bolt {
+      color: var(--base-blue);
+      font-size: 1.4rem;
+    }
+    .wallet-area { display: flex; align-items: center; gap: 0.75rem; }
+
     button {
       background: var(--base-blue); color: white; border: none;
       padding: 0.6rem 1.2rem; border-radius: 999px;
-      font-size: 0.95rem; font-weight: 600; cursor: pointer;
-      transition: transform 0.1s, background 0.15s; font-family: inherit;
+      font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; transition: transform 0.1s, background 0.15s;
+      font-family: inherit;
     }
-    button:hover { background: var(--base-blue-dark); transform: translateY(-1px); }
+    button:hover:not(:disabled) {
+      background: var(--base-blue-dark);
+      transform: translateY(-1px);
+    }
+    button:active:not(:disabled) { transform: translateY(0); }
+    button:disabled { background: var(--border); cursor: not-allowed; opacity: 0.6; }
 
+    .btn-secondary {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--surface);
+    }
+
+    .addr-pill {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 0.9rem;
+      display: inline-flex; align-items: center; gap: 0.5rem;
+    }
+    .addr-pill .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    /* ---- Hero ---- */
     .hero {
       text-align: center;
       padding: 4rem 2rem 2rem;
@@ -64,8 +122,10 @@
       margin-bottom: 1rem;
     }
     .hero p {
-      color: var(--text-dim); font-size: 1.1rem;
-      max-width: 480px; margin: 0 auto;
+      color: var(--text-dim);
+      font-size: 1.1rem;
+      max-width: 480px;
+      margin: 0 auto;
     }
     .hero .recipient {
       margin-top: 1rem;
@@ -78,24 +138,246 @@
       font-family: ui-monospace, monospace;
       color: var(--text-dim);
     }
+    .hero .recipient a { color: var(--base-blue-light); }
 
     main {
       max-width: 640px;
       margin: 0 auto;
       padding: 0 1.5rem 4rem;
     }
-    section { padding: 1.5rem; }
-    h2 { font-size: 1.05rem; margin-bottom: 1rem; }
-    footer { padding: 2rem; text-align: center; color: var(--text-dim); border-top: 1px solid var(--border); }
+
+    /* ---- Cards ---- */
+    .card {
+      background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 4px 24px -8px rgba(0,82,255,0.15);
+    }
+    .card h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--text);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .badge {
+      background: var(--base-blue);
+      color: white;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge.live { background: var(--success); }
+
+    /* ---- Tip form ---- */
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    input[type="number"], textarea {
+      width: 100%;
+      background: var(--bg-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.15s;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--base-blue);
+      box-shadow: 0 0 0 3px rgba(0,82,255,0.15);
+    }
+    textarea { min-height: 70px; resize: vertical; }
+    .input-row { margin-bottom: 1rem; }
+
+    .preset-amounts {
+      display: flex; gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .preset-amounts button {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 0.85rem;
+      font-size: 0.85rem;
+      border-radius: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+    .preset-amounts button:hover:not(:disabled) {
+      background: var(--surface);
+      border-color: var(--base-blue);
+    }
+    .preset-amounts button.active {
+      background: var(--base-blue);
+      border-color: var(--base-blue);
+      color: white;
+    }
+
+    .send-btn {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1rem;
+      border-radius: 12px;
+    }
+
+    .toast {
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      border: 1px solid transparent;
+    }
+    .toast.success {
+      background: rgba(0,210,122,0.1);
+      border-color: var(--success);
+      color: var(--success);
+    }
+    .toast.error {
+      background: rgba(255,77,109,0.1);
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    /* ---- Stats grid ---- */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.75rem;
+    }
+    .stat-cell {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--base-blue-light);
+      margin-bottom: 0.25rem;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ---- Tips list ---- */
+    .tip-item {
+      padding: 0.85rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .tip-item:last-child { border-bottom: none; }
+    .tip-item:first-child { padding-top: 0; }
+    .tip-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 0.3rem;
+    }
+    .tip-from {
+      font-family: ui-monospace, monospace;
+      font-size: 0.85rem;
+      color: var(--base-blue-light);
+    }
+    .tip-from:hover { text-decoration: underline; }
+    .tip-amount {
+      font-weight: 700;
+      color: var(--success);
+      font-size: 0.95rem;
+    }
+    .tip-meta {
+      display: flex; justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+    .tip-note {
+      color: var(--text);
+      font-size: 0.95rem;
+      margin-top: 0.25rem;
+      word-break: break-word;
+    }
+    .empty {
+      color: var(--text-dim);
+      text-align: center;
+      padding: 1.5rem 0;
+    }
+
+    /* ---- Owner withdraw ---- */
+    .owner-card {
+      border: 1px solid var(--base-blue);
+      background: linear-gradient(135deg, rgba(0,82,255,0.08), var(--surface));
+    }
+    .owner-card h2 {
+      color: var(--base-blue-light);
+    }
+    .balance-display {
+      font-size: 2rem;
+      font-weight: 800;
+      text-align: center;
+      color: var(--base-blue-light);
+      margin: 0.5rem 0 1rem;
+    }
+
+    /* ---- Network warning ---- */
+    .warn-banner {
+      background: rgba(255,157,0,0.1);
+      border: 1px solid var(--warn);
+      color: var(--warn);
+      padding: 0.85rem 1rem;
+      border-radius: 10px;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 1rem;
+    }
+    .warn-banner button {
+      background: var(--warn);
+      color: var(--bg);
+      padding: 0.4rem 0.9rem;
+      font-size: 0.85rem;
+    }
+
+    /* ---- Footer ---- */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--text-dim); margin: 0 0.5rem; }
+
+    @media (max-width: 600px) {
+      .topbar { padding: 1rem 1.25rem; }
+      .hero { padding: 2.5rem 1rem 1.5rem; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .stat-cell { display: flex; justify-content: space-between; align-items: center; text-align: left; }
+      .stat-value { font-size: 1.2rem; margin-bottom: 0; }
+    }
   </style>
 </head>
 <body>
+
   <header class="topbar">
     <div class="brand">
       <span class="bolt">⚡</span>
       <span>tipjar</span>
     </div>
-    <div class="wallet-area">
+    <div class="wallet-area" id="wallet-area">
       <button id="connect-btn">Connect Wallet</button>
     </div>
   </header>
@@ -109,20 +391,360 @@
   </section>
 
   <main>
-    <section>
+
+    <div id="network-warning"></div>
+
+    <section class="card">
       <h2>Send a tip</h2>
-      <p>Form goes here.</p>
+
+      <div class="input-row">
+        <label for="amount-input">Amount (ETH)</label>
+        <input id="amount-input" type="number" step="0.0001" min="0" placeholder="0.001" />
+      </div>
+
+      <div class="preset-amounts">
+        <button data-amount="0.0005" type="button">0.0005</button>
+        <button data-amount="0.001" type="button">0.001</button>
+        <button data-amount="0.005" type="button">0.005</button>
+        <button data-amount="0.01" type="button">0.01</button>
+      </div>
+
+      <div class="input-row">
+        <label for="note-input">Note (optional)</label>
+        <textarea id="note-input" placeholder="Say something nice…" maxlength="200"></textarea>
+      </div>
+
+      <button id="tip-btn" class="send-btn" disabled>Send Tip</button>
+      <div id="tx-result"></div>
     </section>
-    <section>
-      <h2>Stats</h2>
-      <p>Stats go here.</p>
+
+    <section class="card">
+      <h2>
+        <span>Stats</span>
+        <span class="badge live">live</span>
+      </h2>
+      <div class="stats-grid">
+        <div class="stat-cell">
+          <div class="stat-value" id="total-tips">—</div>
+          <div class="stat-label">ETH collected</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-value" id="tip-count">—</div>
+          <div class="stat-label">Tips sent</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-value" id="balance">—</div>
+          <div class="stat-label">In jar (ETH)</div>
+        </div>
+      </div>
     </section>
-    <section>
+
+    <section class="card">
       <h2>Recent tips</h2>
-      <p>List goes here.</p>
+      <div id="tips-list">
+        <p class="empty">Connect your wallet to load tips…</p>
+      </div>
     </section>
+
+    <section class="card owner-card" id="owner-section" style="display: none;">
+      <h2>👑 Owner controls</h2>
+      <div class="balance-display" id="owner-balance">— ETH</div>
+      <button id="withdraw-btn" class="send-btn" disabled>Withdraw all</button>
+      <div id="withdraw-result"></div>
+    </section>
+
   </main>
 
-  <footer><p>Powered by Base.</p></footer>
+  <footer>
+    <p>Powered by Base · contract on
+      <a href="https://basescan.org/address/0x1aacf2B6e0f4da4B7DF380Fd048566CD66eD2C1F" target="_blank" rel="noopener">BaseScan</a></p>
+    <p style="margin-top: 0.5rem;">
+      <a href="https://github.com/hellblade1488/onchain-base" target="_blank" rel="noopener">Source</a>
+    </p>
+  </footer>
+
+  <script type="module">
+    import { BrowserProvider, Contract, parseEther, formatEther } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
+
+    // ---- Constants ----
+    const CONTRACT_ADDRESS = "0x1aacf2B6e0f4da4B7DF380Fd048566CD66eD2C1F";
+    const CONTRACT_ABI = [
+      "function tip(string calldata _note) external payable",
+      "function withdraw() external",
+      "function balance() external view returns (uint256)",
+      "function totalTips() external view returns (uint256)",
+      "function tipCount() external view returns (uint256)",
+      "function tips(uint256) external view returns (address sender, uint256 amount, string note, uint256 timestamp)",
+      "function owner() external view returns (address)",
+      "event NewTip(address indexed sender, uint256 amount, string note)",
+      "event Withdraw(address indexed owner, uint256 amount)"
+    ];
+    const BASE_CHAIN_ID = 8453n;
+    const BASE_CHAIN_HEX = "0x2105";
+    const BASESCAN_TX = "https://basescan.org/tx/";
+    const BASESCAN_ADDR = "https://basescan.org/address/";
+    const TIPS_TO_SHOW = 10;
+
+    // ---- DOM ----
+    const $ = id => document.getElementById(id);
+    const connectBtn = $("connect-btn");
+    const walletArea = $("wallet-area");
+    const networkWarning = $("network-warning");
+    const amountInput = $("amount-input");
+    const noteInput = $("note-input");
+    const tipBtn = $("tip-btn");
+    const txResult = $("tx-result");
+    const totalTipsEl = $("total-tips");
+    const tipCountEl = $("tip-count");
+    const balanceEl = $("balance");
+    const tipsList = $("tips-list");
+    const ownerSection = $("owner-section");
+    const ownerBalanceEl = $("owner-balance");
+    const withdrawBtn = $("withdraw-btn");
+    const withdrawResult = $("withdraw-result");
+    const presetButtons = document.querySelectorAll(".preset-amounts button");
+
+    let provider = null, signer = null, contract = null;
+    let userAddress = null, ownerAddress = null;
+
+    // ---- Helpers ----
+    function shortenAddress(a) { return `${a.slice(0, 6)}…${a.slice(-4)}`; }
+    function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+    function formatEth(wei) { return parseFloat(formatEther(wei)).toFixed(4); }
+    function relativeTime(t) {
+      const d = Math.floor(Date.now()/1000) - t;
+      if (d<60) return `${d}s ago`;
+      if (d<3600) return `${Math.floor(d/60)}m ago`;
+      if (d<86400) return `${Math.floor(d/3600)}h ago`;
+      if (d<2592000) return `${Math.floor(d/86400)}d ago`;
+      return `${Math.floor(d/31536000)}y ago`;
+    }
+    function showToast(target, kind, html) {
+      target.innerHTML = `<div class="toast ${kind}">${html}</div>`;
+    }
+
+    // ---- Tip button enable/disable ----
+    function updateTipBtn() {
+      const amount = parseFloat(amountInput.value);
+      tipBtn.disabled = !contract || !userAddress || isNaN(amount) || amount <= 0;
+    }
+
+    amountInput.addEventListener("input", updateTipBtn);
+    presetButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        amountInput.value = btn.dataset.amount;
+        presetButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        updateTipBtn();
+      });
+    });
+
+    // ---- Network ----
+    async function checkNetwork() {
+      const network = await provider.getNetwork();
+      if (network.chainId !== BASE_CHAIN_ID) {
+        networkWarning.innerHTML = `
+          <div class="warn-banner">
+            <span>You're on the wrong network. Switch to Base mainnet to interact.</span>
+            <button id="switch-btn">Switch to Base</button>
+          </div>
+        `;
+        $("switch-btn").addEventListener("click", switchToBase);
+        return false;
+      }
+      networkWarning.innerHTML = "";
+      return true;
+    }
+
+    async function switchToBase() {
+      try {
+        await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_CHAIN_HEX }] });
+      } catch (err) {
+        if (err.code === 4902) {
+          await window.ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [{
+              chainId: BASE_CHAIN_HEX, chainName: "Base",
+              nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+              rpcUrls: ["https://mainnet.base.org"],
+              blockExplorerUrls: ["https://basescan.org"],
+            }],
+          });
+        }
+      }
+    }
+
+    // ---- Read ----
+    async function loadStats() {
+      try {
+        const [total, count, bal] = await Promise.all([
+          contract.totalTips(),
+          contract.tipCount(),
+          contract.balance(),
+        ]);
+        totalTipsEl.textContent = formatEth(total);
+        tipCountEl.textContent = count.toString();
+        balanceEl.textContent = formatEth(bal);
+        ownerBalanceEl.textContent = `${formatEth(bal)} ETH`;
+        withdrawBtn.disabled = bal === 0n;
+      } catch (err) {
+        console.error("loadStats failed:", err);
+      }
+    }
+
+    async function loadTips() {
+      try {
+        const count = await contract.tipCount();
+        if (count === 0n) {
+          tipsList.innerHTML = `<p class="empty">No tips yet. Be the first ⚡</p>`;
+          return;
+        }
+
+        const total = Number(count);
+        const limit = Math.min(total, TIPS_TO_SHOW);
+        const start = total - limit;
+        const tips = [];
+        for (let i = total - 1; i >= start; i--) {
+          const t = await contract.tips(i);
+          tips.push({
+            sender: t.sender,
+            amount: t.amount,
+            note: t.note,
+            timestamp: Number(t.timestamp),
+          });
+        }
+
+        tipsList.innerHTML = tips.map(t => `
+          <div class="tip-item">
+            <div class="tip-row">
+              <a class="tip-from" href="${BASESCAN_ADDR}${t.sender}" target="_blank" rel="noopener" title="${t.sender}">${shortenAddress(t.sender)}</a>
+              <span class="tip-amount">+${formatEth(t.amount)} ETH</span>
+            </div>
+            ${t.note ? `<div class="tip-note">${escapeHtml(t.note)}</div>` : ""}
+            <div class="tip-meta">
+              <span></span>
+              <span title="${new Date(t.timestamp*1000).toLocaleString()}">${relativeTime(t.timestamp)}</span>
+            </div>
+          </div>
+        `).join("");
+      } catch (err) {
+        console.error("loadTips failed:", err);
+        tipsList.innerHTML = `<p class="empty">Failed to load tips.</p>`;
+      }
+    }
+
+    // ---- Write ----
+    async function sendTip() {
+      const amount = parseFloat(amountInput.value);
+      if (isNaN(amount) || amount <= 0) {
+        showToast(txResult, "error", "Enter a valid amount.");
+        return;
+      }
+      const note = noteInput.value.trim();
+
+      tipBtn.disabled = true;
+      const original = tipBtn.textContent;
+      tipBtn.textContent = "Confirm in wallet…";
+      txResult.innerHTML = "";
+
+      try {
+        const value = parseEther(amount.toString());
+        const tx = await contract.tip(note, { value });
+        tipBtn.textContent = "Waiting for confirmation…";
+        showToast(txResult, "success", `Sent! Tx: <a href="${BASESCAN_TX}${tx.hash}" target="_blank" rel="noopener">${tx.hash.slice(0,10)}…</a>`);
+        await tx.wait();
+        showToast(txResult, "success", `Confirmed ✓ <a href="${BASESCAN_TX}${tx.hash}" target="_blank" rel="noopener">${tx.hash.slice(0,10)}…</a>`);
+        amountInput.value = "";
+        noteInput.value = "";
+        presetButtons.forEach(b => b.classList.remove("active"));
+        await loadStats();
+        await loadTips();
+      } catch (err) {
+        showToast(txResult, "error", `Failed: ${escapeHtml(err.shortMessage || err.message)}`);
+      } finally {
+        tipBtn.textContent = original;
+        updateTipBtn();
+      }
+    }
+
+    async function withdrawAll() {
+      withdrawBtn.disabled = true;
+      const original = withdrawBtn.textContent;
+      withdrawBtn.textContent = "Confirm in wallet…";
+      withdrawResult.innerHTML = "";
+      try {
+        const tx = await contract.withdraw();
+        withdrawBtn.textContent = "Waiting…";
+        showToast(withdrawResult, "success", `Withdrawing… <a href="${BASESCAN_TX}${tx.hash}" target="_blank" rel="noopener">${tx.hash.slice(0,10)}…</a>`);
+        await tx.wait();
+        showToast(withdrawResult, "success", `Done ✓ ETH sent to your wallet.`);
+        await loadStats();
+      } catch (err) {
+        showToast(withdrawResult, "error", `Failed: ${escapeHtml(err.shortMessage || err.message)}`);
+      } finally {
+        withdrawBtn.textContent = original;
+      }
+    }
+
+    tipBtn.addEventListener("click", sendTip);
+    withdrawBtn.addEventListener("click", withdrawAll);
+
+    // ---- Live events ----
+    function listenForTips() {
+      contract.on("NewTip", () => {
+        loadStats();
+        loadTips();
+      });
+    }
+
+    // ---- Connect ----
+    async function connectWallet() {
+      if (!window.ethereum) {
+        alert("No wallet detected. Install MetaMask or Rabby.");
+        return;
+      }
+      try {
+        provider = new BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = await provider.getSigner();
+        userAddress = await signer.getAddress();
+
+        // Replace connect button with address pill
+        walletArea.innerHTML = `
+          <span class="addr-pill">
+            <span class="dot"></span>
+            ${shortenAddress(userAddress)}
+          </span>
+        `;
+
+        const ok = await checkNetwork();
+        if (!ok) return;
+
+        contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+        ownerAddress = await contract.owner();
+
+        // Show owner section if connected wallet === owner
+        if (userAddress.toLowerCase() === ownerAddress.toLowerCase()) {
+          ownerSection.style.display = "block";
+        }
+
+        await loadStats();
+        await loadTips();
+        listenForTips();
+        updateTipBtn();
+      } catch (err) {
+        console.error(err);
+        walletArea.innerHTML = `<button id="connect-btn">Connect Wallet</button>`;
+        $("connect-btn").addEventListener("click", connectWallet);
+      }
+    }
+
+    connectBtn.addEventListener("click", connectWallet);
+
+    if (window.ethereum) {
+      window.ethereum.on("chainChanged", () => window.location.reload());
+      window.ethereum.on("accountsChanged", () => window.location.reload());
+    }
+  </script>
 </body>
 </html>
