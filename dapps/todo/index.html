@@ -7,15 +7,10 @@
   <title>OnChain Todo</title>
   <style>
     :root {
-      --base-blue: #0052ff;
-      --base-blue-dark: #003ecc;
-      --base-blue-light: #5b8eff;
-      --bg: #05060d;
-      --bg-2: #0a0c18;
-      --surface: #11142a;
-      --surface-2: #1a1d3a;
-      --text: #f5f5fa;
-      --text-dim: #8a8aa0;
+      --base-blue: #0052ff; --base-blue-dark: #003ecc; --base-blue-light: #5b8eff;
+      --bg: #05060d; --bg-2: #0a0c18;
+      --surface: #11142a; --surface-2: #1a1d3a;
+      --text: #f5f5fa; --text-dim: #8a8aa0;
       --border: #232845;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,52 +23,80 @@
       min-height: 100vh;
       line-height: 1.5;
     }
-    header {
+
+    .topbar {
+      display: flex; justify-content: space-between; align-items: center;
       padding: 1.25rem 2rem;
       border-bottom: 1px solid var(--border);
-      display: flex; justify-content: space-between; align-items: center;
+      backdrop-filter: blur(8px);
+      background: rgba(5,6,13,0.6);
+      position: sticky; top: 0; z-index: 10;
     }
+    .brand {
+      font-weight: 700; font-size: 1.1rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .brand .icon { font-size: 1.4rem; }
     button {
       background: var(--base-blue); color: white; border: none;
       padding: 0.6rem 1.2rem; border-radius: 999px;
       font-size: 0.95rem; font-weight: 600; cursor: pointer;
-      font-family: inherit;
+      transition: transform 0.1s, background 0.15s; font-family: inherit;
     }
-    button:hover { background: var(--base-blue-dark); }
-    section { padding: 1.5rem 2rem; }
-    h1 { font-size: 3rem; font-weight: 800; }
+    button:hover { background: var(--base-blue-dark); transform: translateY(-1px); }
+
+    .hero {
+      text-align: center;
+      padding: 4rem 2rem 2rem;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #ffffff 0%, var(--base-blue-light) 50%, var(--base-blue) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.05;
+      margin-bottom: 1rem;
+    }
+    .hero p {
+      color: var(--text-dim); font-size: 1.1rem;
+      max-width: 480px; margin: 0 auto;
+    }
+
+    main {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 0 1.5rem 4rem;
+    }
+    section { padding: 1.5rem; }
     h2 { font-size: 1.05rem; margin-bottom: 1rem; }
     footer { padding: 2rem; text-align: center; color: var(--text-dim); border-top: 1px solid var(--border); }
   </style>
 </head>
 <body>
-  <header>
-    <div>📋 todo</div>
-    <button id="connect-btn">Connect Wallet</button>
+  <header class="topbar">
+    <div class="brand">
+      <span class="icon">📋</span>
+      <span>todo</span>
+    </div>
+    <div class="wallet-area">
+      <button id="connect-btn">Connect Wallet</button>
+    </div>
   </header>
 
-  <section>
+  <section class="hero">
     <h1>OnChain Todo</h1>
-    <p>Your personal task list, stored forever in a smart contract on Base.</p>
+    <p>Your personal task list, stored forever in a smart contract on Base. No backend, no database — just the chain.</p>
   </section>
 
   <main>
-    <section>
-      <h2>Add a task</h2>
-      <p>Add task input + button.</p>
-    </section>
-    <section>
-      <h2>Progress</h2>
-      <p>Stats grid here.</p>
-    </section>
-    <section>
-      <h2>My tasks</h2>
-      <p>List of tasks here.</p>
-    </section>
-    <section>
-      <h2>Look up someone else</h2>
-      <p>Address input + lookup button.</p>
-    </section>
+    <section><h2>Add a task</h2><p>Form goes here.</p></section>
+    <section><h2>Progress</h2><p>Stats go here.</p></section>
+    <section><h2>My tasks</h2><p>List goes here.</p></section>
+    <section><h2>Look up someone else</h2><p>Address input goes here.</p></section>
   </main>
 
   <footer><p>Powered by Base.</p></footer>
