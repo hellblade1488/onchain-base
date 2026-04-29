@@ -15,26 +15,12 @@
       --radius: 14px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
-      background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,82,255,0.18), transparent 70%), var(--bg);
-      color: var(--text); min-height: 100vh; line-height: 1.5;
-    }
-    .topbar {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 1.25rem 2rem; border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(8px); background: rgba(5,6,13,0.6);
-      position: sticky; top: 0; z-index: 10;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,82,255,0.18), transparent 70%), var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 2rem; border-bottom: 1px solid var(--border); backdrop-filter: blur(8px); background: rgba(5,6,13,0.6); position: sticky; top: 0; z-index: 10; }
     .brand { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
     .brand .icon { font-size: 1.4rem; }
     .wallet-area { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; }
-    button {
-      background: var(--base-blue); color: white; border: none;
-      padding: 0.6rem 1.2rem; border-radius: 999px;
-      font-size: 0.95rem; font-weight: 600; cursor: pointer;
-      transition: transform 0.1s, background 0.15s; font-family: inherit;
-    }
+    button { background: var(--base-blue); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 999px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: transform 0.1s, background 0.15s; font-family: inherit; }
     button:hover:not(:disabled) { background: var(--base-blue-dark); transform: translateY(-1px); }
     button:disabled { background: var(--border); cursor: not-allowed; opacity: 0.6; }
 
@@ -51,25 +37,24 @@
     .warn-banner button { background: var(--warn); color: var(--bg); padding: 0.4rem 0.9rem; font-size: 0.85rem; }
 
     .hero { text-align: center; padding: 4rem 2rem 2rem; max-width: 720px; margin: 0 auto; }
-    .hero h1 {
-      font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; letter-spacing: -0.03em;
-      background: linear-gradient(135deg, #ffffff 0%, var(--base-blue-light) 50%, var(--base-blue) 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-      line-height: 1.05; margin-bottom: 1rem;
-    }
+    .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg, #ffffff 0%, var(--base-blue-light) 50%, var(--base-blue) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.05; margin-bottom: 1rem; }
     .hero p { color: var(--text-dim); font-size: 1.1rem; max-width: 480px; margin: 0 auto; }
 
     main { max-width: 640px; margin: 0 auto; padding: 0 1.5rem 4rem; }
-    .card {
-      background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.5rem;
-      margin-bottom: 1.25rem;
-      box-shadow: 0 4px 24px -8px rgba(0,82,255,0.15);
-    }
+    .card { background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem; box-shadow: 0 4px 24px -8px rgba(0,82,255,0.15); }
     .card h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; }
     .empty { color: var(--text-dim); text-align: center; padding: 1.5rem 0; }
+
+    .task-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.85rem 0; border-bottom: 1px solid var(--border); }
+    .task-item:last-child { border-bottom: none; }
+    .task-item:first-child { padding-top: 0; }
+    .task-checkbox { width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: transparent; padding: 0; margin-top: 2px; cursor: default; }
+    .task-checkbox.done { background: var(--success); border-color: var(--success); color: white; }
+    .task-checkbox.done::before { content: "✓"; font-size: 14px; font-weight: 700; }
+    .task-body { flex: 1; min-width: 0; }
+    .task-text { font-size: 1rem; word-break: break-word; color: var(--text); }
+    .task-text.done { text-decoration: line-through; color: var(--text-dim); }
+    .task-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem; }
 
     footer { padding: 2rem; text-align: center; color: var(--text-dim); border-top: 1px solid var(--border); }
   </style>
@@ -90,15 +75,8 @@
   <main>
     <div id="network-warning"></div>
 
-    <section class="card">
-      <h2>Add a task</h2>
-      <p style="color: var(--text-dim);">Form goes here.</p>
-    </section>
-
-    <section class="card">
-      <h2>Progress</h2>
-      <p style="color: var(--text-dim);">Stats go here.</p>
-    </section>
+    <section class="card"><h2>Add a task</h2><p style="color: var(--text-dim);">Form goes here.</p></section>
+    <section class="card"><h2>Progress</h2><p style="color: var(--text-dim);">Stats go here.</p></section>
 
     <section class="card">
       <h2>My tasks</h2>
@@ -107,10 +85,7 @@
       </div>
     </section>
 
-    <section class="card">
-      <h2>Look up someone else</h2>
-      <p style="color: var(--text-dim);">Lookup goes here.</p>
-    </section>
+    <section class="card"><h2>Look up someone else</h2><p style="color: var(--text-dim);">Lookup goes here.</p></section>
   </main>
 
   <footer><p>Powered by Base.</p></footer>
@@ -120,8 +95,7 @@
 
     const CONTRACT_ADDRESS = "0x3b96111b2e59aCbaCfD8240cc6B24504489Ef06D";
     const CONTRACT_ABI = [
-      "function myTasks() external view returns (tuple(uint256 id, string text, bool done, uint256 createdAt)[])",
-      "function tasksOf(address _user) external view returns (tuple(uint256 id, string text, bool done, uint256 createdAt)[])"
+      "function myTasks() external view returns (tuple(uint256 id, string text, bool done, uint256 createdAt)[])"
     ];
     const BASE_CHAIN_ID = 8453n;
     const BASE_CHAIN_HEX = "0x2105";
@@ -139,7 +113,33 @@
     function setManuallyDisconnected(v) { try { v ? localStorage.setItem(DISCONNECTED_KEY, "1") : localStorage.removeItem(DISCONNECTED_KEY); } catch {} }
 
     function shortenAddress(a) { return `${a.slice(0,6)}…${a.slice(-4)}`; }
+    function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+    function relativeTime(t) {
+      const d = Math.floor(Date.now()/1000) - t;
+      if (d<60) return `${d}s ago`;
+      if (d<3600) return `${Math.floor(d/60)}m ago`;
+      if (d<86400) return `${Math.floor(d/3600)}h ago`;
+      if (d<2592000) return `${Math.floor(d/86400)}d ago`;
+      return `${Math.floor(d/31536000)}y ago`;
+    }
     function networkName(id) { const m = { 1n:"Ethereum", 8453n:"Base", 10n:"Optimism", 137n:"Polygon" }; return m[id] || `Chain ${id}`; }
+
+    function renderTasks(tasks) {
+      if (!tasks || tasks.length === 0) {
+        tasksList.innerHTML = `<p class="empty">No tasks yet. Add one above 👆</p>`;
+        return;
+      }
+      const sorted = [...tasks].sort((a, b) => Number(a.done) - Number(b.done));
+      tasksList.innerHTML = sorted.map(t => `
+        <div class="task-item" data-id="${t.id}">
+          <span class="task-checkbox ${t.done ? 'done' : ''}"></span>
+          <div class="task-body">
+            <div class="task-text ${t.done ? 'done' : ''}">${escapeHtml(t.text)}</div>
+            <div class="task-meta">#${t.id} · created ${relativeTime(Number(t.createdAt))}</div>
+          </div>
+        </div>
+      `).join("");
+    }
 
     function renderConnected(isBase) {
       walletArea.innerHTML = `
@@ -181,12 +181,8 @@
     async function loadMyTasks() {
       try {
         const tasks = await contract.myTasks();
-        if (!tasks || tasks.length === 0) {
-          tasksList.innerHTML = `<p class="empty">No tasks yet.</p>`;
-          return;
-        }
-        tasksList.innerHTML = `<p class="empty">Loaded ${tasks.length} task(s). Rendering coming next.</p>`;
-        console.log("Tasks:", tasks);
+        const normalized = tasks.map(t => ({ id: Number(t.id), text: t.text, done: t.done, createdAt: Number(t.createdAt) }));
+        renderTasks(normalized);
       } catch (err) {
         console.error(err);
         tasksList.innerHTML = `<p class="empty">Failed to load tasks.</p>`;
