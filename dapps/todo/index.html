@@ -5,6 +5,46 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OnChain Todo</title>
+  <style>
+    :root {
+      --base-blue: #0052ff;
+      --base-blue-dark: #003ecc;
+      --base-blue-light: #5b8eff;
+      --bg: #05060d;
+      --bg-2: #0a0c18;
+      --surface: #11142a;
+      --surface-2: #1a1d3a;
+      --text: #f5f5fa;
+      --text-dim: #8a8aa0;
+      --border: #232845;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,82,255,0.18), transparent 70%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    header {
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    button {
+      background: var(--base-blue); color: white; border: none;
+      padding: 0.6rem 1.2rem; border-radius: 999px;
+      font-size: 0.95rem; font-weight: 600; cursor: pointer;
+      font-family: inherit;
+    }
+    button:hover { background: var(--base-blue-dark); }
+    section { padding: 1.5rem 2rem; }
+    h1 { font-size: 3rem; font-weight: 800; }
+    h2 { font-size: 1.05rem; margin-bottom: 1rem; }
+    footer { padding: 2rem; text-align: center; color: var(--text-dim); border-top: 1px solid var(--border); }
+  </style>
 </head>
 <body>
   <header>
@@ -22,25 +62,20 @@
       <h2>Add a task</h2>
       <p>Add task input + button.</p>
     </section>
-
     <section>
       <h2>Progress</h2>
       <p>Stats grid here.</p>
     </section>
-
     <section>
       <h2>My tasks</h2>
       <p>List of tasks here.</p>
     </section>
-
     <section>
       <h2>Look up someone else</h2>
       <p>Address input + lookup button.</p>
     </section>
   </main>
 
-  <footer>
-    <p>Powered by Base.</p>
-  </footer>
+  <footer><p>Powered by Base.</p></footer>
 </body>
 </html>
