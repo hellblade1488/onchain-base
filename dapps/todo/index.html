@@ -62,6 +62,8 @@
     .task-text { font-size: 1rem; word-break: break-word; color: var(--text); }
     .task-text.done { text-decoration: line-through; color: var(--text-dim); }
     .task-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem; }
+    .task-remove { background: transparent; border: 1px solid transparent; color: var(--text-dim); padding: 0.25rem 0.55rem; border-radius: 6px; font-size: 0.85rem; flex-shrink: 0; }
+    .task-remove:hover { color: var(--error); background: rgba(255,77,109,0.1); border-color: rgba(255,77,109,0.3); transform: none; }
     footer { padding: 2rem; text-align: center; color: var(--text-dim); border-top: 1px solid var(--border); }
   </style>
 </head>
@@ -99,6 +101,7 @@
     const CONTRACT_ABI = [
       "function addTask(string calldata _text) external returns (uint256 id)",
       "function completeTask(uint256 _id) external",
+      "function removeTask(uint256 _id) external",
       "function myTasks() external view returns (tuple(uint256 id, string text, bool done, uint256 createdAt)[])"
     ];
     const BASE_CHAIN_ID = 8453n;
@@ -127,9 +130,11 @@
             <div class="task-text ${t.done ? 'done' : ''}">${escapeHtml(t.text)}</div>
             <div class="task-meta">#${t.id} · created ${relativeTime(Number(t.createdAt))}</div>
           </div>
+          <button class="task-remove" data-action="remove" data-id="${t.id}" title="Remove">✕</button>
         </div>
       `).join("");
       tasksList.querySelectorAll('[data-action="complete"]').forEach(b => b.addEventListener("click", () => completeTask(b.dataset.id)));
+      tasksList.querySelectorAll('[data-action="remove"]').forEach(b => b.addEventListener("click", () => removeTask(b.dataset.id)));
     }
 
     function renderConnected(isBase) {
@@ -183,6 +188,16 @@
         showToast(addResult, "info", `Completing #${id}…`);
         await tx.wait();
         showToast(addResult, "success", `Marked #${id} as done ✓`);
+        await loadMyTasks();
+      } catch (err) { showToast(addResult, "error", `Failed: ${escapeHtml(err.shortMessage || err.message)}`); }
+    }
+    async function removeTask(id) {
+      if (!confirm(`Remove task #${id} permanently?`)) return;
+      try {
+        const tx = await contract.removeTask(id);
+        showToast(addResult, "info", `Removing #${id}…`);
+        await tx.wait();
+        showToast(addResult, "success", `Removed #${id} ✓`);
         await loadMyTasks();
       } catch (err) { showToast(addResult, "error", `Failed: ${escapeHtml(err.shortMessage || err.message)}`); }
     }
