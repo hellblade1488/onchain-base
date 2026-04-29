@@ -102,7 +102,10 @@
       "function addTask(string calldata _text) external returns (uint256 id)",
       "function completeTask(uint256 _id) external",
       "function removeTask(uint256 _id) external",
-      "function myTasks() external view returns (tuple(uint256 id, string text, bool done, uint256 createdAt)[])"
+      "function myTasks() external view returns (tuple(uint256 id, string text, bool done, uint256 createdAt)[])",
+      "event TaskAdded(address indexed owner, uint256 indexed id, string text)",
+      "event TaskCompleted(address indexed owner, uint256 indexed id)",
+      "event TaskRemoved(address indexed owner, uint256 indexed id)"
     ];
     const BASE_CHAIN_ID = 8453n;
     const BASE_CHAIN_HEX = "0x2105";
@@ -119,7 +122,6 @@
     function relativeTime(t) { const d = Math.floor(Date.now()/1000) - t; if (d<60) return `${d}s ago`; if (d<3600) return `${Math.floor(d/60)}m ago`; if (d<86400) return `${Math.floor(d/3600)}h ago`; return `${Math.floor(d/86400)}d ago`; }
     function networkName(id) { const m = { 1n:"Ethereum", 8453n:"Base", 10n:"Optimism", 137n:"Polygon" }; return m[id] || `Chain ${id}`; }
     function showToast(t, k, h) { t.innerHTML = `<div class="toast ${k}">${h}</div>`; }
-
     function renderTasks(tasks) {
       if (!tasks || tasks.length === 0) { tasksList.innerHTML = `<p class="empty">No tasks yet. Add one above 👆</p>`; return; }
       const sorted = [...tasks].sort((a, b) => Number(a.done) - Number(b.done));
@@ -136,7 +138,6 @@
       tasksList.querySelectorAll('[data-action="complete"]').forEach(b => b.addEventListener("click", () => completeTask(b.dataset.id)));
       tasksList.querySelectorAll('[data-action="remove"]').forEach(b => b.addEventListener("click", () => removeTask(b.dataset.id)));
     }
-
     function renderConnected(isBase) {
       walletArea.innerHTML = `<button class="net-pill ${isBase ? 'ok' : 'wrong'}" id="net-pill"><span class="net-dot"></span>${isBase ? 'Base' : networkName(currentChainId)}</button><div class="addr-group"><span class="addr-pill"><span class="dot"></span>${shortenAddress(userAddress)}</span><button class="disconnect-btn" id="disconnect-btn" title="Disconnect">×</button></div>`;
       $("net-pill").addEventListener("click", switchToBase);
@@ -201,8 +202,16 @@
         await loadMyTasks();
       } catch (err) { showToast(addResult, "error", `Failed: ${escapeHtml(err.shortMessage || err.message)}`); }
     }
+    function listenForEvents() {
+      try {
+        contract.on("TaskAdded", (owner) => { if (owner.toLowerCase() === userAddress.toLowerCase()) loadMyTasks(); });
+        contract.on("TaskCompleted", (owner) => { if (owner.toLowerCase() === userAddress.toLowerCase()) loadMyTasks(); });
+        contract.on("TaskRemoved", (owner) => { if (owner.toLowerCase() === userAddress.toLowerCase()) loadMyTasks(); });
+      } catch (e) { console.warn(e); }
+    }
     function disconnectWallet() {
       setManuallyDisconnected(true);
+      try { if (contract) contract.removeAllListeners(); } catch {}
       provider = null; signer = null; contract = null; userAddress = null; currentChainId = null;
       renderDisconnected(); networkWarning.innerHTML = "";
       addBtn.disabled = true;
@@ -225,6 +234,7 @@
         contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
         addBtn.disabled = taskInput.value.trim().length === 0;
         await loadMyTasks();
+        listenForEvents();
       } catch (err) { console.error(err); renderDisconnected(); }
     }
     taskInput.addEventListener("input", () => { addBtn.disabled = !contract || taskInput.value.trim().length === 0; });
