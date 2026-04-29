@@ -8,14 +8,15 @@
   <style>
     :root {
       --base-blue: #0052ff; --base-blue-dark: #003ecc; --base-blue-light: #5b8eff;
-      --bg: #05060d; --bg-2: #0a0c18;
-      --surface: #11142a; --surface-2: #1a1d3a;
+      --bg: #05060d; --bg-2: #0a0c18; --surface: #11142a; --surface-2: #1a1d3a;
       --text: #f5f5fa; --text-dim: #8a8aa0;
       --border: #232845; --warn: #ff9d00; --error: #ff4d6d; --success: #00d27a;
       --radius: 14px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,82,255,0.18), transparent 70%), var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+    a { color: var(--base-blue-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
     .topbar { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 2rem; border-bottom: 1px solid var(--border); backdrop-filter: blur(8px); background: rgba(5,6,13,0.6); position: sticky; top: 0; z-index: 10; }
     .brand { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
     .brand .icon { font-size: 1.4rem; }
@@ -34,6 +35,10 @@
     .disconnect-btn:hover { background: rgba(255,77,109,0.15); color: var(--error); transform: none; }
     .warn-banner { background: rgba(255,157,0,0.1); border: 1px solid var(--warn); color: var(--warn); padding: 0.85rem 1rem; border-radius: 10px; margin: 1rem 0; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
     .warn-banner button { background: var(--warn); color: var(--bg); padding: 0.4rem 0.9rem; font-size: 0.85rem; }
+    .toast { padding: 0.75rem 1rem; border-radius: 10px; margin-top: 1rem; font-size: 0.9rem; border: 1px solid transparent; }
+    .toast.success { background: rgba(0,210,122,0.1); border-color: var(--success); color: var(--success); }
+    .toast.error { background: rgba(255,77,109,0.1); border-color: var(--error); color: var(--error); }
+    .toast.info { background: rgba(91,142,255,0.1); border-color: var(--base-blue-light); color: var(--base-blue-light); }
     .hero { text-align: center; padding: 4rem 2rem 2rem; max-width: 720px; margin: 0 auto; }
     .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg, #ffffff 0%, var(--base-blue-light) 50%, var(--base-blue) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.05; margin-bottom: 1rem; }
     .hero p { color: var(--text-dim); font-size: 1.1rem; max-width: 480px; margin: 0 auto; }
@@ -76,6 +81,7 @@
         <input id="task-input" type="text" placeholder="What do you want to do?" maxlength="200" />
         <button id="add-btn" disabled>Add</button>
       </div>
+      <div id="add-result"></div>
     </section>
     <section class="card"><h2>Progress</h2><p style="color: var(--text-dim);">Stats go here.</p></section>
     <section class="card">
@@ -89,12 +95,16 @@
   <script type="module">
     import { BrowserProvider, Contract } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
     const CONTRACT_ADDRESS = "0x3b96111b2e59aCbaCfD8240cc6B24504489Ef06D";
-    const CONTRACT_ABI = ["function myTasks() external view returns (tuple(uint256 id, string text, bool done, uint256 createdAt)[])"];
+    const CONTRACT_ABI = [
+      "function addTask(string calldata _text) external returns (uint256 id)",
+      "function myTasks() external view returns (tuple(uint256 id, string text, bool done, uint256 createdAt)[])"
+    ];
     const BASE_CHAIN_ID = 8453n;
     const BASE_CHAIN_HEX = "0x2105";
+    const BASESCAN_TX = "https://basescan.org/tx/";
     const $ = id => document.getElementById(id);
     const walletArea = $("wallet-area"), networkWarning = $("network-warning"), tasksList = $("tasks-list");
-    const taskInput = $("task-input"), addBtn = $("add-btn");
+    const taskInput = $("task-input"), addBtn = $("add-btn"), addResult = $("add-result");
     let provider = null, signer = null, contract = null, userAddress = null, currentChainId = null;
     const DISCONNECTED_KEY = "todo_disconnected";
     function isManuallyDisconnected() { try { return localStorage.getItem(DISCONNECTED_KEY) === "1"; } catch { return false; } }
@@ -103,6 +113,7 @@
     function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
     function relativeTime(t) { const d = Math.floor(Date.now()/1000) - t; if (d<60) return `${d}s ago`; if (d<3600) return `${Math.floor(d/60)}m ago`; if (d<86400) return `${Math.floor(d/3600)}h ago`; return `${Math.floor(d/86400)}d ago`; }
     function networkName(id) { const m = { 1n:"Ethereum", 8453n:"Base", 10n:"Optimism", 137n:"Polygon" }; return m[id] || `Chain ${id}`; }
+    function showToast(t, k, h) { t.innerHTML = `<div class="toast ${k}">${h}</div>`; }
     function renderTasks(tasks) {
       if (!tasks || tasks.length === 0) { tasksList.innerHTML = `<p class="empty">No tasks yet. Add one above 👆</p>`; return; }
       const sorted = [...tasks].sort((a, b) => Number(a.done) - Number(b.done));
@@ -141,10 +152,29 @@
       catch (err) { if (err.code === 4902) { await window.ethereum.request({ method: "wallet_addEthereumChain", params: [{ chainId: BASE_CHAIN_HEX, chainName: "Base", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: ["https://mainnet.base.org"], blockExplorerUrls: ["https://basescan.org"] }] }); } }
     }
     async function loadMyTasks() {
+      try { const tasks = await contract.myTasks(); renderTasks(tasks.map(t => ({ id: Number(t.id), text: t.text, done: t.done, createdAt: Number(t.createdAt) }))); }
+      catch (err) { console.error(err); tasksList.innerHTML = `<p class="empty">Failed to load tasks.</p>`; }
+    }
+    async function addTask() {
+      const text = taskInput.value.trim();
+      if (!text) return;
+      addBtn.disabled = true;
+      const original = addBtn.textContent;
+      addBtn.textContent = "Confirm…";
       try {
-        const tasks = await contract.myTasks();
-        renderTasks(tasks.map(t => ({ id: Number(t.id), text: t.text, done: t.done, createdAt: Number(t.createdAt) })));
-      } catch (err) { console.error(err); tasksList.innerHTML = `<p class="empty">Failed to load tasks.</p>`; }
+        const tx = await contract.addTask(text);
+        addBtn.textContent = "Pending…";
+        showToast(addResult, "success", `Sent: <a href="${BASESCAN_TX}${tx.hash}" target="_blank" rel="noopener">${tx.hash.slice(0,10)}…</a>`);
+        await tx.wait();
+        showToast(addResult, "success", `Task added ✓`);
+        taskInput.value = "";
+        await loadMyTasks();
+      } catch (err) {
+        showToast(addResult, "error", `Failed: ${escapeHtml(err.shortMessage || err.message)}`);
+      } finally {
+        addBtn.textContent = original;
+        addBtn.disabled = taskInput.value.trim().length === 0;
+      }
     }
     function disconnectWallet() {
       setManuallyDisconnected(true);
@@ -173,6 +203,8 @@
       } catch (err) { console.error(err); renderDisconnected(); }
     }
     taskInput.addEventListener("input", () => { addBtn.disabled = !contract || taskInput.value.trim().length === 0; });
+    taskInput.addEventListener("keydown", e => { if (e.key === "Enter" && !addBtn.disabled) addTask(); });
+    addBtn.addEventListener("click", addTask);
     renderDisconnected();
     (async () => { if (!isManuallyDisconnected()) await connectWallet(true); })();
     if (window.ethereum) { window.ethereum.on("chainChanged", () => window.location.reload()); window.ethereum.on("accountsChanged", () => window.location.reload()); }
