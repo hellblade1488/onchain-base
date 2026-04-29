@@ -23,7 +23,6 @@
     button { background: var(--base-blue); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 999px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: transform 0.1s, background 0.15s; font-family: inherit; }
     button:hover:not(:disabled) { background: var(--base-blue-dark); transform: translateY(-1px); }
     button:disabled { background: var(--border); cursor: not-allowed; opacity: 0.6; }
-
     .net-pill { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.8rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); }
     .net-pill.ok { background: rgba(0,82,255,0.12); color: var(--base-blue-light); border-color: rgba(0,82,255,0.4); }
     .net-pill.wrong { background: rgba(255,157,0,0.12); color: var(--warn); border-color: rgba(255,157,0,0.5); }
@@ -35,16 +34,18 @@
     .disconnect-btn:hover { background: rgba(255,77,109,0.15); color: var(--error); transform: none; }
     .warn-banner { background: rgba(255,157,0,0.1); border: 1px solid var(--warn); color: var(--warn); padding: 0.85rem 1rem; border-radius: 10px; margin: 1rem 0; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
     .warn-banner button { background: var(--warn); color: var(--bg); padding: 0.4rem 0.9rem; font-size: 0.85rem; }
-
     .hero { text-align: center; padding: 4rem 2rem 2rem; max-width: 720px; margin: 0 auto; }
     .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg, #ffffff 0%, var(--base-blue-light) 50%, var(--base-blue) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.05; margin-bottom: 1rem; }
     .hero p { color: var(--text-dim); font-size: 1.1rem; max-width: 480px; margin: 0 auto; }
-
     main { max-width: 640px; margin: 0 auto; padding: 0 1.5rem 4rem; }
     .card { background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem; box-shadow: 0 4px 24px -8px rgba(0,82,255,0.15); }
     .card h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; }
     .empty { color: var(--text-dim); text-align: center; padding: 1.5rem 0; }
-
+    input[type="text"] { width: 100%; background: var(--bg-2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1rem; font-family: inherit; font-size: 1rem; transition: border-color 0.15s; }
+    input:focus { outline: none; border-color: var(--base-blue); box-shadow: 0 0 0 3px rgba(0,82,255,0.15); }
+    .add-row { display: flex; gap: 0.5rem; }
+    .add-row input { flex: 1; }
+    .add-row button { white-space: nowrap; padding: 0.85rem 1.5rem; border-radius: 10px; }
     .task-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.85rem 0; border-bottom: 1px solid var(--border); }
     .task-item:last-child { border-bottom: none; }
     .task-item:first-child { padding-top: 0; }
@@ -55,80 +56,55 @@
     .task-text { font-size: 1rem; word-break: break-word; color: var(--text); }
     .task-text.done { text-decoration: line-through; color: var(--text-dim); }
     .task-meta { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem; }
-
     footer { padding: 2rem; text-align: center; color: var(--text-dim); border-top: 1px solid var(--border); }
   </style>
 </head>
 <body>
   <header class="topbar">
     <div class="brand"><span class="icon">📋</span><span>todo</span></div>
-    <div class="wallet-area" id="wallet-area">
-      <button id="connect-btn">Connect Wallet</button>
-    </div>
+    <div class="wallet-area" id="wallet-area"><button id="connect-btn">Connect Wallet</button></div>
   </header>
-
   <section class="hero">
     <h1>OnChain Todo</h1>
     <p>Your personal task list, stored forever in a smart contract on Base.</p>
   </section>
-
   <main>
     <div id="network-warning"></div>
-
-    <section class="card"><h2>Add a task</h2><p style="color: var(--text-dim);">Form goes here.</p></section>
-    <section class="card"><h2>Progress</h2><p style="color: var(--text-dim);">Stats go here.</p></section>
-
     <section class="card">
-      <h2>My tasks</h2>
-      <div id="tasks-list">
-        <p class="empty">Connect your wallet to see your tasks…</p>
+      <h2>Add a task</h2>
+      <div class="add-row">
+        <input id="task-input" type="text" placeholder="What do you want to do?" maxlength="200" />
+        <button id="add-btn" disabled>Add</button>
       </div>
     </section>
-
+    <section class="card"><h2>Progress</h2><p style="color: var(--text-dim);">Stats go here.</p></section>
+    <section class="card">
+      <h2>My tasks</h2>
+      <div id="tasks-list"><p class="empty">Connect your wallet to see your tasks…</p></div>
+    </section>
     <section class="card"><h2>Look up someone else</h2><p style="color: var(--text-dim);">Lookup goes here.</p></section>
   </main>
-
   <footer><p>Powered by Base.</p></footer>
 
   <script type="module">
     import { BrowserProvider, Contract } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
-
     const CONTRACT_ADDRESS = "0x3b96111b2e59aCbaCfD8240cc6B24504489Ef06D";
-    const CONTRACT_ABI = [
-      "function myTasks() external view returns (tuple(uint256 id, string text, bool done, uint256 createdAt)[])"
-    ];
+    const CONTRACT_ABI = ["function myTasks() external view returns (tuple(uint256 id, string text, bool done, uint256 createdAt)[])"];
     const BASE_CHAIN_ID = 8453n;
     const BASE_CHAIN_HEX = "0x2105";
-
     const $ = id => document.getElementById(id);
-    const walletArea = $("wallet-area");
-    const networkWarning = $("network-warning");
-    const tasksList = $("tasks-list");
-
-    let provider = null, signer = null, contract = null;
-    let userAddress = null, currentChainId = null;
-
+    const walletArea = $("wallet-area"), networkWarning = $("network-warning"), tasksList = $("tasks-list");
+    const taskInput = $("task-input"), addBtn = $("add-btn");
+    let provider = null, signer = null, contract = null, userAddress = null, currentChainId = null;
     const DISCONNECTED_KEY = "todo_disconnected";
     function isManuallyDisconnected() { try { return localStorage.getItem(DISCONNECTED_KEY) === "1"; } catch { return false; } }
     function setManuallyDisconnected(v) { try { v ? localStorage.setItem(DISCONNECTED_KEY, "1") : localStorage.removeItem(DISCONNECTED_KEY); } catch {} }
-
     function shortenAddress(a) { return `${a.slice(0,6)}…${a.slice(-4)}`; }
     function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-    function relativeTime(t) {
-      const d = Math.floor(Date.now()/1000) - t;
-      if (d<60) return `${d}s ago`;
-      if (d<3600) return `${Math.floor(d/60)}m ago`;
-      if (d<86400) return `${Math.floor(d/3600)}h ago`;
-      if (d<2592000) return `${Math.floor(d/86400)}d ago`;
-      return `${Math.floor(d/31536000)}y ago`;
-    }
+    function relativeTime(t) { const d = Math.floor(Date.now()/1000) - t; if (d<60) return `${d}s ago`; if (d<3600) return `${Math.floor(d/60)}m ago`; if (d<86400) return `${Math.floor(d/3600)}h ago`; return `${Math.floor(d/86400)}d ago`; }
     function networkName(id) { const m = { 1n:"Ethereum", 8453n:"Base", 10n:"Optimism", 137n:"Polygon" }; return m[id] || `Chain ${id}`; }
-
     function renderTasks(tasks) {
-      if (!tasks || tasks.length === 0) {
-        tasksList.innerHTML = `<p class="empty">No tasks yet. Add one above 👆</p>`;
-        return;
-      }
+      if (!tasks || tasks.length === 0) { tasksList.innerHTML = `<p class="empty">No tasks yet. Add one above 👆</p>`; return; }
       const sorted = [...tasks].sort((a, b) => Number(a.done) - Number(b.done));
       tasksList.innerHTML = sorted.map(t => `
         <div class="task-item" data-id="${t.id}">
@@ -140,15 +116,8 @@
         </div>
       `).join("");
     }
-
     function renderConnected(isBase) {
-      walletArea.innerHTML = `
-        <button class="net-pill ${isBase ? 'ok' : 'wrong'}" id="net-pill"><span class="net-dot"></span>${isBase ? 'Base' : networkName(currentChainId)}</button>
-        <div class="addr-group">
-          <span class="addr-pill"><span class="dot"></span>${shortenAddress(userAddress)}</span>
-          <button class="disconnect-btn" id="disconnect-btn" title="Disconnect">×</button>
-        </div>
-      `;
+      walletArea.innerHTML = `<button class="net-pill ${isBase ? 'ok' : 'wrong'}" id="net-pill"><span class="net-dot"></span>${isBase ? 'Base' : networkName(currentChainId)}</button><div class="addr-group"><span class="addr-pill"><span class="dot"></span>${shortenAddress(userAddress)}</span><button class="disconnect-btn" id="disconnect-btn" title="Disconnect">×</button></div>`;
       $("net-pill").addEventListener("click", switchToBase);
       $("disconnect-btn").addEventListener("click", disconnectWallet);
     }
@@ -156,7 +125,6 @@
       walletArea.innerHTML = `<button id="connect-btn">Connect Wallet</button>`;
       $("connect-btn").addEventListener("click", () => connectWallet(false));
     }
-
     async function checkNetwork() {
       const network = await provider.getNetwork();
       currentChainId = network.chainId;
@@ -168,46 +136,29 @@
       networkWarning.innerHTML = "";
       return true;
     }
-
     async function switchToBase() {
       try { await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_CHAIN_HEX }] }); }
-      catch (err) {
-        if (err.code === 4902) {
-          await window.ethereum.request({ method: "wallet_addEthereumChain", params: [{ chainId: BASE_CHAIN_HEX, chainName: "Base", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: ["https://mainnet.base.org"], blockExplorerUrls: ["https://basescan.org"] }] });
-        }
-      }
+      catch (err) { if (err.code === 4902) { await window.ethereum.request({ method: "wallet_addEthereumChain", params: [{ chainId: BASE_CHAIN_HEX, chainName: "Base", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: ["https://mainnet.base.org"], blockExplorerUrls: ["https://basescan.org"] }] }); } }
     }
-
     async function loadMyTasks() {
       try {
         const tasks = await contract.myTasks();
-        const normalized = tasks.map(t => ({ id: Number(t.id), text: t.text, done: t.done, createdAt: Number(t.createdAt) }));
-        renderTasks(normalized);
-      } catch (err) {
-        console.error(err);
-        tasksList.innerHTML = `<p class="empty">Failed to load tasks.</p>`;
-      }
+        renderTasks(tasks.map(t => ({ id: Number(t.id), text: t.text, done: t.done, createdAt: Number(t.createdAt) })));
+      } catch (err) { console.error(err); tasksList.innerHTML = `<p class="empty">Failed to load tasks.</p>`; }
     }
-
     function disconnectWallet() {
       setManuallyDisconnected(true);
-      provider = null; signer = null; contract = null;
-      userAddress = null; currentChainId = null;
-      renderDisconnected();
-      networkWarning.innerHTML = "";
+      provider = null; signer = null; contract = null; userAddress = null; currentChainId = null;
+      renderDisconnected(); networkWarning.innerHTML = "";
+      addBtn.disabled = true;
       tasksList.innerHTML = `<p class="empty">Connect your wallet to see your tasks…</p>`;
     }
-
     async function connectWallet(silent = false) {
       if (!window.ethereum) { if (!silent) alert("No wallet detected."); return; }
       try {
         provider = new BrowserProvider(window.ethereum);
-        if (silent === true) {
-          const accs = await window.ethereum.request({ method: "eth_accounts" });
-          if (!accs || accs.length === 0) return;
-        } else {
-          await provider.send("eth_requestAccounts", []);
-        }
+        if (silent === true) { const accs = await window.ethereum.request({ method: "eth_accounts" }); if (!accs || accs.length === 0) return; }
+        else { await provider.send("eth_requestAccounts", []); }
         setManuallyDisconnected(false);
         signer = await provider.getSigner();
         userAddress = await signer.getAddress();
@@ -217,19 +168,14 @@
         const ok = await checkNetwork();
         if (!ok) return;
         contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+        addBtn.disabled = taskInput.value.trim().length === 0;
         await loadMyTasks();
-      } catch (err) {
-        console.error(err);
-        renderDisconnected();
-      }
+      } catch (err) { console.error(err); renderDisconnected(); }
     }
-
+    taskInput.addEventListener("input", () => { addBtn.disabled = !contract || taskInput.value.trim().length === 0; });
     renderDisconnected();
     (async () => { if (!isManuallyDisconnected()) await connectWallet(true); })();
-    if (window.ethereum) {
-      window.ethereum.on("chainChanged", () => window.location.reload());
-      window.ethereum.on("accountsChanged", () => window.location.reload());
-    }
+    if (window.ethereum) { window.ethereum.on("chainChanged", () => window.location.reload()); window.ethereum.on("accountsChanged", () => window.location.reload()); }
   </script>
 </body>
 </html>
