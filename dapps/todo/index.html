@@ -52,6 +52,9 @@
     .add-row { display: flex; gap: 0.5rem; }
     .add-row input { flex: 1; }
     .add-row button { white-space: nowrap; padding: 0.85rem 1.5rem; border-radius: 10px; }
+    .lookup-row { display: flex; gap: 0.5rem; }
+    .lookup-row input { flex: 1; font-family: ui-monospace, monospace; font-size: 0.9rem; }
+    .lookup-row button { padding: 0.85rem 1.2rem; border-radius: 10px; }
     .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
     .stat-cell { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
     .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--base-blue-light); margin-bottom: 0.25rem; }
@@ -104,32 +107,43 @@
       <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width: 0%;"></div></div>
     </section>
     <section class="card">
-      <h2>My tasks</h2>
+      <h2 id="tasks-heading">My tasks</h2>
       <div id="tasks-list"><p class="empty">Connect your wallet to see your tasks…</p></div>
     </section>
-    <section class="card"><h2>Look up someone else</h2><p style="color: var(--text-dim);">Lookup goes here.</p></section>
+    <section class="card">
+      <h2>Look up someone else</h2>
+      <div class="lookup-row">
+        <input id="lookup-input" type="text" placeholder="0x… address" />
+        <button id="lookup-btn">View</button>
+      </div>
+      <div id="lookup-result" style="margin-top: 1rem;"></div>
+    </section>
   </main>
   <footer><p>Powered by Base.</p></footer>
 
   <script type="module">
-    import { BrowserProvider, Contract } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
+    import { BrowserProvider, Contract, JsonRpcProvider, isAddress } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
     const CONTRACT_ADDRESS = "0x3b96111b2e59aCbaCfD8240cc6B24504489Ef06D";
     const CONTRACT_ABI = [
       "function addTask(string calldata _text) external returns (uint256 id)",
       "function completeTask(uint256 _id) external",
       "function removeTask(uint256 _id) external",
       "function myTasks() external view returns (tuple(uint256 id, string text, bool done, uint256 createdAt)[])",
+      "function tasksOf(address _user) external view returns (tuple(uint256 id, string text, bool done, uint256 createdAt)[])",
       "event TaskAdded(address indexed owner, uint256 indexed id, string text)",
       "event TaskCompleted(address indexed owner, uint256 indexed id)",
       "event TaskRemoved(address indexed owner, uint256 indexed id)"
     ];
     const BASE_CHAIN_ID = 8453n;
     const BASE_CHAIN_HEX = "0x2105";
+    const BASE_RPC = "https://mainnet.base.org";
     const BASESCAN_TX = "https://basescan.org/tx/";
+    const BASESCAN_ADDR = "https://basescan.org/address/";
     const $ = id => document.getElementById(id);
-    const walletArea = $("wallet-area"), networkWarning = $("network-warning"), tasksList = $("tasks-list");
+    const walletArea = $("wallet-area"), networkWarning = $("network-warning"), tasksList = $("tasks-list"), tasksHeading = $("tasks-heading");
     const taskInput = $("task-input"), addBtn = $("add-btn"), addResult = $("add-result");
     const totalCount = $("total-count"), doneCount = $("done-count"), pendingCount = $("pending-count"), progressFill = $("progress-fill");
+    const lookupInput = $("lookup-input"), lookupBtn = $("lookup-btn"), lookupResult = $("lookup-result");
     let provider = null, signer = null, contract = null, userAddress = null, currentChainId = null;
     const DISCONNECTED_KEY = "todo_disconnected";
     function isManuallyDisconnected() { try { return localStorage.getItem(DISCONNECTED_KEY) === "1"; } catch { return false; } }
@@ -144,21 +158,25 @@
       totalCount.textContent = total; doneCount.textContent = done; pendingCount.textContent = pending;
       progressFill.style.width = `${total === 0 ? 0 : Math.round(done / total * 100)}%`;
     }
-    function renderTasks(tasks) {
-      if (!tasks || tasks.length === 0) { tasksList.innerHTML = `<p class="empty">No tasks yet. Add one above 👆</p>`; return; }
+    function renderTasks(tasks, isMine) {
+      if (!tasks || tasks.length === 0) { tasksList.innerHTML = `<p class="empty">${isMine ? "No tasks yet. Add one above 👆" : "This address has no tasks."}</p>`; return; }
       const sorted = [...tasks].sort((a, b) => Number(a.done) - Number(b.done));
       tasksList.innerHTML = sorted.map(t => `
         <div class="task-item" data-id="${t.id}">
-          <button class="task-checkbox ${t.done ? 'done' : ''}" ${t.done ? 'disabled' : ''} data-action="complete" data-id="${t.id}" title="${t.done ? 'Completed' : 'Mark as done'}"></button>
+          ${isMine
+            ? `<button class="task-checkbox ${t.done ? 'done' : ''}" ${t.done ? 'disabled' : ''} data-action="complete" data-id="${t.id}" title="${t.done ? 'Completed' : 'Mark as done'}"></button>`
+            : `<span class="task-checkbox ${t.done ? 'done' : ''}"></span>`}
           <div class="task-body">
             <div class="task-text ${t.done ? 'done' : ''}">${escapeHtml(t.text)}</div>
             <div class="task-meta">#${t.id} · created ${relativeTime(Number(t.createdAt))}</div>
           </div>
-          <button class="task-remove" data-action="remove" data-id="${t.id}" title="Remove">✕</button>
+          ${isMine ? `<button class="task-remove" data-action="remove" data-id="${t.id}" title="Remove">✕</button>` : ""}
         </div>
       `).join("");
-      tasksList.querySelectorAll('[data-action="complete"]').forEach(b => b.addEventListener("click", () => completeTask(b.dataset.id)));
-      tasksList.querySelectorAll('[data-action="remove"]').forEach(b => b.addEventListener("click", () => removeTask(b.dataset.id)));
+      if (isMine) {
+        tasksList.querySelectorAll('[data-action="complete"]').forEach(b => b.addEventListener("click", () => completeTask(b.dataset.id)));
+        tasksList.querySelectorAll('[data-action="remove"]').forEach(b => b.addEventListener("click", () => removeTask(b.dataset.id)));
+      }
     }
     function renderConnected(isBase) {
       walletArea.innerHTML = `<button class="net-pill ${isBase ? 'ok' : 'wrong'}" id="net-pill"><span class="net-dot"></span>${isBase ? 'Base' : networkName(currentChainId)}</button><div class="addr-group"><span class="addr-pill"><span class="dot"></span>${shortenAddress(userAddress)}</span><button class="disconnect-btn" id="disconnect-btn" title="Disconnect">×</button></div>`;
@@ -182,15 +200,31 @@
     }
     async function switchToBase() {
       try { await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_CHAIN_HEX }] }); }
-      catch (err) { if (err.code === 4902) { await window.ethereum.request({ method: "wallet_addEthereumChain", params: [{ chainId: BASE_CHAIN_HEX, chainName: "Base", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: ["https://mainnet.base.org"], blockExplorerUrls: ["https://basescan.org"] }] }); } }
+      catch (err) { if (err.code === 4902) { await window.ethereum.request({ method: "wallet_addEthereumChain", params: [{ chainId: BASE_CHAIN_HEX, chainName: "Base", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: [BASE_RPC], blockExplorerUrls: ["https://basescan.org"] }] }); } }
     }
     async function loadMyTasks() {
       try {
         const tasks = await contract.myTasks();
         const normalized = tasks.map(t => ({ id: Number(t.id), text: t.text, done: t.done, createdAt: Number(t.createdAt) }));
-        renderTasks(normalized);
+        tasksHeading.textContent = "My tasks";
+        renderTasks(normalized, true);
         renderStats(normalized);
       } catch (err) { console.error(err); tasksList.innerHTML = `<p class="empty">Failed to load tasks.</p>`; }
+    }
+    async function lookupAddress() {
+      const addr = lookupInput.value.trim();
+      if (!isAddress(addr)) { showToast(lookupResult, "error", "Not a valid 0x… address."); return; }
+      lookupResult.innerHTML = "";
+      try {
+        const reader = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, new JsonRpcProvider(BASE_RPC));
+        const tasks = await reader.tasksOf(addr);
+        const normalized = tasks.map(t => ({ id: Number(t.id), text: t.text, done: t.done, createdAt: Number(t.createdAt) }));
+        tasksHeading.innerHTML = `Tasks of <a href="${BASESCAN_ADDR}${addr}" target="_blank" rel="noopener">${shortenAddress(addr)}</a>`;
+        renderTasks(normalized, false);
+        renderStats(normalized);
+        showToast(lookupResult, "info", `Showing ${normalized.length} task(s) for ${shortenAddress(addr)}. <a href="#" id="back-mine">Back to my list</a>`);
+        $("back-mine")?.addEventListener("click", e => { e.preventDefault(); lookupResult.innerHTML = ""; if (contract) loadMyTasks(); });
+      } catch (err) { showToast(lookupResult, "error", `Lookup failed: ${escapeHtml(err.message)}`); }
     }
     async function addTask() {
       const text = taskInput.value.trim();
@@ -268,6 +302,8 @@
     taskInput.addEventListener("input", () => { addBtn.disabled = !contract || taskInput.value.trim().length === 0; });
     taskInput.addEventListener("keydown", e => { if (e.key === "Enter" && !addBtn.disabled) addTask(); });
     addBtn.addEventListener("click", addTask);
+    lookupBtn.addEventListener("click", lookupAddress);
+    lookupInput.addEventListener("keydown", e => { if (e.key === "Enter") lookupAddress(); });
     renderDisconnected();
     (async () => { if (!isManuallyDisconnected()) await connectWallet(true); })();
     if (window.ethereum) { window.ethereum.on("chainChanged", () => window.location.reload()); window.ethereum.on("accountsChanged", () => window.location.reload()); }
