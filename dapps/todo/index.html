@@ -11,19 +11,14 @@
       --bg: #05060d; --bg-2: #0a0c18;
       --surface: #11142a; --surface-2: #1a1d3a;
       --text: #f5f5fa; --text-dim: #8a8aa0;
-      --border: #232845;
+      --border: #232845; --success: #00d27a;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
-      background:
-        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,82,255,0.18), transparent 70%),
-        var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      line-height: 1.5;
+      background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,82,255,0.18), transparent 70%), var(--bg);
+      color: var(--text); min-height: 100vh; line-height: 1.5;
     }
-
     .topbar {
       display: flex; justify-content: space-between; align-items: center;
       padding: 1.25rem 2rem;
@@ -32,10 +27,7 @@
       background: rgba(5,6,13,0.6);
       position: sticky; top: 0; z-index: 10;
     }
-    .brand {
-      font-weight: 700; font-size: 1.1rem;
-      display: flex; align-items: center; gap: 0.5rem;
-    }
+    .brand { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
     .brand .icon { font-size: 1.4rem; }
     button {
       background: var(--base-blue); color: white; border: none;
@@ -43,34 +35,31 @@
       font-size: 0.95rem; font-weight: 600; cursor: pointer;
       transition: transform 0.1s, background 0.15s; font-family: inherit;
     }
-    button:hover { background: var(--base-blue-dark); transform: translateY(-1px); }
+    button:hover:not(:disabled) { background: var(--base-blue-dark); transform: translateY(-1px); }
+    button:disabled { background: var(--border); cursor: not-allowed; opacity: 0.6; }
 
-    .hero {
-      text-align: center;
-      padding: 4rem 2rem 2rem;
-      max-width: 720px;
-      margin: 0 auto;
+    .addr-pill {
+      background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 0.9rem; border-radius: 999px;
+      font-family: ui-monospace, monospace; font-size: 0.9rem;
+      display: inline-flex; align-items: center; gap: 0.5rem;
     }
+    .addr-pill .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--success); box-shadow: 0 0 8px var(--success);
+    }
+
+    .hero { text-align: center; padding: 4rem 2rem 2rem; max-width: 720px; margin: 0 auto; }
     .hero h1 {
-      font-size: clamp(2.5rem, 6vw, 4rem);
-      font-weight: 800;
-      letter-spacing: -0.03em;
+      font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; letter-spacing: -0.03em;
       background: linear-gradient(135deg, #ffffff 0%, var(--base-blue-light) 50%, var(--base-blue) 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
-      line-height: 1.05;
-      margin-bottom: 1rem;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      line-height: 1.05; margin-bottom: 1rem;
     }
-    .hero p {
-      color: var(--text-dim); font-size: 1.1rem;
-      max-width: 480px; margin: 0 auto;
-    }
+    .hero p { color: var(--text-dim); font-size: 1.1rem; max-width: 480px; margin: 0 auto; }
 
-    main {
-      max-width: 640px;
-      margin: 0 auto;
-      padding: 0 1.5rem 4rem;
-    }
+    main { max-width: 640px; margin: 0 auto; padding: 0 1.5rem 4rem; }
     section { padding: 1.5rem; }
     h2 { font-size: 1.05rem; margin-bottom: 1rem; }
     footer { padding: 2rem; text-align: center; color: var(--text-dim); border-top: 1px solid var(--border); }
@@ -82,7 +71,7 @@
       <span class="icon">📋</span>
       <span>todo</span>
     </div>
-    <div class="wallet-area">
+    <div class="wallet-area" id="wallet-area">
       <button id="connect-btn">Connect Wallet</button>
     </div>
   </header>
@@ -96,9 +85,35 @@
     <section><h2>Add a task</h2><p>Form goes here.</p></section>
     <section><h2>Progress</h2><p>Stats go here.</p></section>
     <section><h2>My tasks</h2><p>List goes here.</p></section>
-    <section><h2>Look up someone else</h2><p>Address input goes here.</p></section>
+    <section><h2>Look up someone else</h2><p>Lookup goes here.</p></section>
   </main>
 
   <footer><p>Powered by Base.</p></footer>
+
+  <script type="module">
+    import { BrowserProvider } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
+
+    const $ = id => document.getElementById(id);
+    const walletArea = $("wallet-area");
+
+    let provider = null, signer = null, userAddress = null;
+
+    function shortenAddress(a) { return `${a.slice(0,6)}…${a.slice(-4)}`; }
+
+    async function connectWallet() {
+      if (!window.ethereum) { alert("No wallet detected. Install MetaMask or Rabby."); return; }
+      try {
+        provider = new BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = await provider.getSigner();
+        userAddress = await signer.getAddress();
+        walletArea.innerHTML = `<span class="addr-pill"><span class="dot"></span>${shortenAddress(userAddress)}</span>`;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    $("connect-btn").addEventListener("click", connectWallet);
+  </script>
 </body>
 </html>
