@@ -15,8 +15,7 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,82,255,0.18), transparent 70%), var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
-    a { color: var(--base-blue-light); text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    a { color: var(--base-blue-light); text-decoration: none; } a:hover { text-decoration: underline; }
     .topbar { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 2rem; border-bottom: 1px solid var(--border); backdrop-filter: blur(8px); background: rgba(5,6,13,0.6); position: sticky; top: 0; z-index: 10; }
     .brand { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
     .brand .icon { font-size: 1.4rem; }
@@ -54,9 +53,11 @@
     .task-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.85rem 0; border-bottom: 1px solid var(--border); }
     .task-item:last-child { border-bottom: none; }
     .task-item:first-child { padding-top: 0; }
-    .task-checkbox { width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: transparent; padding: 0; margin-top: 2px; cursor: default; }
+    .task-checkbox { width: 22px; height: 22px; border: 2px solid var(--border); border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: transparent; padding: 0; margin-top: 2px; cursor: pointer; transition: all 0.15s; }
+    .task-checkbox:hover { border-color: var(--base-blue); transform: none; }
     .task-checkbox.done { background: var(--success); border-color: var(--success); color: white; }
     .task-checkbox.done::before { content: "✓"; font-size: 14px; font-weight: 700; }
+    .task-checkbox:disabled { cursor: not-allowed; }
     .task-body { flex: 1; min-width: 0; }
     .task-text { font-size: 1rem; word-break: break-word; color: var(--text); }
     .task-text.done { text-decoration: line-through; color: var(--text-dim); }
@@ -97,6 +98,7 @@
     const CONTRACT_ADDRESS = "0x3b96111b2e59aCbaCfD8240cc6B24504489Ef06D";
     const CONTRACT_ABI = [
       "function addTask(string calldata _text) external returns (uint256 id)",
+      "function completeTask(uint256 _id) external",
       "function myTasks() external view returns (tuple(uint256 id, string text, bool done, uint256 createdAt)[])"
     ];
     const BASE_CHAIN_ID = 8453n;
@@ -114,19 +116,22 @@
     function relativeTime(t) { const d = Math.floor(Date.now()/1000) - t; if (d<60) return `${d}s ago`; if (d<3600) return `${Math.floor(d/60)}m ago`; if (d<86400) return `${Math.floor(d/3600)}h ago`; return `${Math.floor(d/86400)}d ago`; }
     function networkName(id) { const m = { 1n:"Ethereum", 8453n:"Base", 10n:"Optimism", 137n:"Polygon" }; return m[id] || `Chain ${id}`; }
     function showToast(t, k, h) { t.innerHTML = `<div class="toast ${k}">${h}</div>`; }
+
     function renderTasks(tasks) {
       if (!tasks || tasks.length === 0) { tasksList.innerHTML = `<p class="empty">No tasks yet. Add one above 👆</p>`; return; }
       const sorted = [...tasks].sort((a, b) => Number(a.done) - Number(b.done));
       tasksList.innerHTML = sorted.map(t => `
         <div class="task-item" data-id="${t.id}">
-          <span class="task-checkbox ${t.done ? 'done' : ''}"></span>
+          <button class="task-checkbox ${t.done ? 'done' : ''}" ${t.done ? 'disabled' : ''} data-action="complete" data-id="${t.id}" title="${t.done ? 'Completed' : 'Mark as done'}"></button>
           <div class="task-body">
             <div class="task-text ${t.done ? 'done' : ''}">${escapeHtml(t.text)}</div>
             <div class="task-meta">#${t.id} · created ${relativeTime(Number(t.createdAt))}</div>
           </div>
         </div>
       `).join("");
+      tasksList.querySelectorAll('[data-action="complete"]').forEach(b => b.addEventListener("click", () => completeTask(b.dataset.id)));
     }
+
     function renderConnected(isBase) {
       walletArea.innerHTML = `<button class="net-pill ${isBase ? 'ok' : 'wrong'}" id="net-pill"><span class="net-dot"></span>${isBase ? 'Base' : networkName(currentChainId)}</button><div class="addr-group"><span class="addr-pill"><span class="dot"></span>${shortenAddress(userAddress)}</span><button class="disconnect-btn" id="disconnect-btn" title="Disconnect">×</button></div>`;
       $("net-pill").addEventListener("click", switchToBase);
@@ -169,12 +174,17 @@
         showToast(addResult, "success", `Task added ✓`);
         taskInput.value = "";
         await loadMyTasks();
-      } catch (err) {
-        showToast(addResult, "error", `Failed: ${escapeHtml(err.shortMessage || err.message)}`);
-      } finally {
-        addBtn.textContent = original;
-        addBtn.disabled = taskInput.value.trim().length === 0;
-      }
+      } catch (err) { showToast(addResult, "error", `Failed: ${escapeHtml(err.shortMessage || err.message)}`); }
+      finally { addBtn.textContent = original; addBtn.disabled = taskInput.value.trim().length === 0; }
+    }
+    async function completeTask(id) {
+      try {
+        const tx = await contract.completeTask(id);
+        showToast(addResult, "info", `Completing #${id}…`);
+        await tx.wait();
+        showToast(addResult, "success", `Marked #${id} as done ✓`);
+        await loadMyTasks();
+      } catch (err) { showToast(addResult, "error", `Failed: ${escapeHtml(err.shortMessage || err.message)}`); }
     }
     function disconnectWallet() {
       setManuallyDisconnected(true);
