@@ -43,13 +43,21 @@
     .hero p { color: var(--text-dim); font-size: 1.1rem; max-width: 480px; margin: 0 auto; }
     main { max-width: 640px; margin: 0 auto; padding: 0 1.5rem 4rem; }
     .card { background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem; box-shadow: 0 4px 24px -8px rgba(0,82,255,0.15); }
-    .card h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; }
+    .card h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
+    .badge { background: var(--base-blue); color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 999px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .badge.live { background: var(--success); }
     .empty { color: var(--text-dim); text-align: center; padding: 1.5rem 0; }
     input[type="text"] { width: 100%; background: var(--bg-2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1rem; font-family: inherit; font-size: 1rem; transition: border-color 0.15s; }
     input:focus { outline: none; border-color: var(--base-blue); box-shadow: 0 0 0 3px rgba(0,82,255,0.15); }
     .add-row { display: flex; gap: 0.5rem; }
     .add-row input { flex: 1; }
     .add-row button { white-space: nowrap; padding: 0.85rem 1.5rem; border-radius: 10px; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
+    .stat-cell { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--base-blue-light); margin-bottom: 0.25rem; }
+    .stat-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+    .progress-bar { width: 100%; height: 6px; background: var(--bg-2); border-radius: 999px; margin-top: 0.75rem; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--base-blue), var(--success)); border-radius: 999px; transition: width 0.3s ease; }
     .task-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.85rem 0; border-bottom: 1px solid var(--border); }
     .task-item:last-child { border-bottom: none; }
     .task-item:first-child { padding-top: 0; }
@@ -86,7 +94,15 @@
       </div>
       <div id="add-result"></div>
     </section>
-    <section class="card"><h2>Progress</h2><p style="color: var(--text-dim);">Stats go here.</p></section>
+    <section class="card">
+      <h2><span>Progress</span><span class="badge live">live</span></h2>
+      <div class="stats-grid">
+        <div class="stat-cell"><div class="stat-value" id="total-count">—</div><div class="stat-label">Total</div></div>
+        <div class="stat-cell"><div class="stat-value" id="done-count">—</div><div class="stat-label">Done</div></div>
+        <div class="stat-cell"><div class="stat-value" id="pending-count">—</div><div class="stat-label">Pending</div></div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width: 0%;"></div></div>
+    </section>
     <section class="card">
       <h2>My tasks</h2>
       <div id="tasks-list"><p class="empty">Connect your wallet to see your tasks…</p></div>
@@ -113,6 +129,7 @@
     const $ = id => document.getElementById(id);
     const walletArea = $("wallet-area"), networkWarning = $("network-warning"), tasksList = $("tasks-list");
     const taskInput = $("task-input"), addBtn = $("add-btn"), addResult = $("add-result");
+    const totalCount = $("total-count"), doneCount = $("done-count"), pendingCount = $("pending-count"), progressFill = $("progress-fill");
     let provider = null, signer = null, contract = null, userAddress = null, currentChainId = null;
     const DISCONNECTED_KEY = "todo_disconnected";
     function isManuallyDisconnected() { try { return localStorage.getItem(DISCONNECTED_KEY) === "1"; } catch { return false; } }
@@ -122,6 +139,11 @@
     function relativeTime(t) { const d = Math.floor(Date.now()/1000) - t; if (d<60) return `${d}s ago`; if (d<3600) return `${Math.floor(d/60)}m ago`; if (d<86400) return `${Math.floor(d/3600)}h ago`; return `${Math.floor(d/86400)}d ago`; }
     function networkName(id) { const m = { 1n:"Ethereum", 8453n:"Base", 10n:"Optimism", 137n:"Polygon" }; return m[id] || `Chain ${id}`; }
     function showToast(t, k, h) { t.innerHTML = `<div class="toast ${k}">${h}</div>`; }
+    function renderStats(tasks) {
+      const total = tasks.length, done = tasks.filter(t => t.done).length, pending = total - done;
+      totalCount.textContent = total; doneCount.textContent = done; pendingCount.textContent = pending;
+      progressFill.style.width = `${total === 0 ? 0 : Math.round(done / total * 100)}%`;
+    }
     function renderTasks(tasks) {
       if (!tasks || tasks.length === 0) { tasksList.innerHTML = `<p class="empty">No tasks yet. Add one above 👆</p>`; return; }
       const sorted = [...tasks].sort((a, b) => Number(a.done) - Number(b.done));
@@ -163,8 +185,12 @@
       catch (err) { if (err.code === 4902) { await window.ethereum.request({ method: "wallet_addEthereumChain", params: [{ chainId: BASE_CHAIN_HEX, chainName: "Base", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: ["https://mainnet.base.org"], blockExplorerUrls: ["https://basescan.org"] }] }); } }
     }
     async function loadMyTasks() {
-      try { const tasks = await contract.myTasks(); renderTasks(tasks.map(t => ({ id: Number(t.id), text: t.text, done: t.done, createdAt: Number(t.createdAt) }))); }
-      catch (err) { console.error(err); tasksList.innerHTML = `<p class="empty">Failed to load tasks.</p>`; }
+      try {
+        const tasks = await contract.myTasks();
+        const normalized = tasks.map(t => ({ id: Number(t.id), text: t.text, done: t.done, createdAt: Number(t.createdAt) }));
+        renderTasks(normalized);
+        renderStats(normalized);
+      } catch (err) { console.error(err); tasksList.innerHTML = `<p class="empty">Failed to load tasks.</p>`; }
     }
     async function addTask() {
       const text = taskInput.value.trim();
@@ -216,6 +242,8 @@
       renderDisconnected(); networkWarning.innerHTML = "";
       addBtn.disabled = true;
       tasksList.innerHTML = `<p class="empty">Connect your wallet to see your tasks…</p>`;
+      totalCount.textContent = "—"; doneCount.textContent = "—"; pendingCount.textContent = "—";
+      progressFill.style.width = "0%";
     }
     async function connectWallet(silent = false) {
       if (!window.ethereum) { if (!silent) alert("No wallet detected."); return; }
