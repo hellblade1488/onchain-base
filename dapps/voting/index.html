@@ -5,19 +5,41 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Base Voting</title>
+  <style>
+    :root {
+      --base-blue: #0052ff; --base-blue-dark: #003ecc; --base-blue-light: #5b8eff;
+      --bg: #05060d; --bg-2: #0a0c18; --surface: #11142a;
+      --text: #f5f5fa; --text-dim: #8a8aa0; --border: #232845;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,82,255,0.18), transparent 70%), var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 2rem; border-bottom: 1px solid var(--border); backdrop-filter: blur(8px); background: rgba(5,6,13,0.6); position: sticky; top: 0; z-index: 10; }
+    .brand { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .brand .icon { font-size: 1.4rem; }
+    button { background: var(--base-blue); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 999px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: transform 0.1s, background 0.15s; font-family: inherit; }
+    button:hover { background: var(--base-blue-dark); transform: translateY(-1px); }
+    .hero { text-align: center; padding: 4rem 2rem 2rem; max-width: 720px; margin: 0 auto; }
+    .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg, #ffffff 0%, var(--base-blue-light) 50%, var(--base-blue) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.05; margin-bottom: 1rem; }
+    .hero p { color: var(--text-dim); font-size: 1.1rem; max-width: 480px; margin: 0 auto; }
+    main { max-width: 720px; margin: 0 auto; padding: 0 1.5rem 4rem; }
+    .card { background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem; box-shadow: 0 4px 24px -8px rgba(0,82,255,0.15); }
+    .card h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; }
+    footer { padding: 2rem; text-align: center; color: var(--text-dim); border-top: 1px solid var(--border); }
+  </style>
 </head>
 <body>
-  <header>
-    <div>🗳️ vote</div>
-    <button id="connect-btn">Connect Wallet</button>
+  <header class="topbar">
+    <div class="brand"><span class="icon">🗳️</span><span>vote</span></div>
+    <div class="wallet-area"><button id="connect-btn">Connect Wallet</button></div>
   </header>
-  <section>
+  <section class="hero">
     <h1>Base Voting</h1>
-    <p>On-chain polls on Base mainnet.</p>
+    <p>On-chain polls on Base mainnet. One address — one vote per proposal.</p>
   </section>
   <main>
-    <section><h2>Create proposal</h2><p>Owner-only proposal form here.</p></section>
-    <section><h2>Proposals</h2><p>List of proposals here.</p></section>
+    <section class="card"><h2>Create proposal</h2><p style="color: var(--text-dim);">Owner-only form here.</p></section>
+    <section class="card"><h2>Proposals</h2><p style="color: var(--text-dim);">List here.</p></section>
   </main>
   <footer><p>Powered by Base.</p></footer>
 </body>
