@@ -4,17 +4,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Base Voting</title>
+  <meta name="description" content="On-chain voting dApp on Base. Create proposals, vote, see live results." />
+  <meta property="og:title" content="Base Voting · on-chain polls" />
+  <meta property="og:description" content="Create polls and vote on chain on Base." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%230052ff%22/><text x=%2250%22 y=%2272%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22 font-weight=%22bold%22>🗳️</text></svg>" />
+  <title>Base Voting · on-chain polls</title>
   <style>
     :root {
       --base-blue: #0052ff; --base-blue-dark: #003ecc; --base-blue-light: #5b8eff;
       --bg: #05060d; --bg-2: #0a0c18; --surface: #11142a; --surface-2: #1a1d3a;
-      --text: #f5f5fa; --text-dim: #8a8aa0; --border: #232845;
-      --warn: #ff9d00; --error: #ff4d6d; --success: #00d27a;
+      --text: #f5f5fa; --text-dim: #8a8aa0;
+      --border: #232845; --warn: #ff9d00; --error: #ff4d6d; --success: #00d27a;
       --radius: 14px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,82,255,0.18), transparent 70%), var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,82,255,0.18), transparent 70%), radial-gradient(ellipse 60% 60% at 80% 100%, rgba(91,142,255,0.10), transparent 70%), var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+    a { color: var(--base-blue-light); text-decoration: none; } a:hover { text-decoration: underline; }
     .topbar { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 2rem; border-bottom: 1px solid var(--border); backdrop-filter: blur(8px); background: rgba(5,6,13,0.6); position: sticky; top: 0; z-index: 10; }
     .brand { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
     .brand .icon { font-size: 1.4rem; }
@@ -33,13 +40,56 @@
     .disconnect-btn:hover { background: rgba(255,77,109,0.15); color: var(--error); transform: none; }
     .warn-banner { background: rgba(255,157,0,0.1); border: 1px solid var(--warn); color: var(--warn); padding: 0.85rem 1rem; border-radius: 10px; margin: 1rem 0; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
     .warn-banner button { background: var(--warn); color: var(--bg); padding: 0.4rem 0.9rem; font-size: 0.85rem; }
+    .toast { padding: 0.75rem 1rem; border-radius: 10px; margin-top: 1rem; font-size: 0.9rem; border: 1px solid transparent; }
+    .toast.success { background: rgba(0,210,122,0.1); border-color: var(--success); color: var(--success); }
+    .toast.error { background: rgba(255,77,109,0.1); border-color: var(--error); color: var(--error); }
+    .toast.info { background: rgba(91,142,255,0.1); border-color: var(--base-blue-light); color: var(--base-blue-light); }
     .hero { text-align: center; padding: 4rem 2rem 2rem; max-width: 720px; margin: 0 auto; }
     .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg, #ffffff 0%, var(--base-blue-light) 50%, var(--base-blue) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.05; margin-bottom: 1rem; }
     .hero p { color: var(--text-dim); font-size: 1.1rem; max-width: 480px; margin: 0 auto; }
     main { max-width: 720px; margin: 0 auto; padding: 0 1.5rem 4rem; }
     .card { background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem; box-shadow: 0 4px 24px -8px rgba(0,82,255,0.15); }
-    .card h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; }
-    footer { padding: 2rem; text-align: center; color: var(--text-dim); border-top: 1px solid var(--border); }
+    .card h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
+    .badge { background: var(--base-blue); color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 999px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .badge.live { background: var(--success); }
+    .badge.closed { background: var(--text-dim); }
+    .badge.voted { background: var(--base-blue); }
+    label { display: block; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem; font-weight: 500; }
+    input[type="text"], input[type="number"], textarea { width: 100%; background: var(--bg-2); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1rem; font-family: inherit; font-size: 1rem; transition: border-color 0.15s; }
+    input:focus, textarea:focus { outline: none; border-color: var(--base-blue); box-shadow: 0 0 0 3px rgba(0,82,255,0.15); }
+    .input-row { margin-bottom: 1rem; }
+    .options-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+    .option-input-row { display: flex; gap: 0.5rem; }
+    .option-input-row input { flex: 1; }
+    .option-input-row button { background: transparent; border: 1px solid var(--border); color: var(--text-dim); padding: 0.6rem 0.9rem; font-size: 0.85rem; }
+    .option-input-row button:hover:not(:disabled) { color: var(--error); border-color: var(--error); transform: none; background: rgba(255,77,109,0.05); }
+    .add-option-btn { background: var(--surface-2); border: 1px dashed var(--border); color: var(--text-dim); padding: 0.6rem; width: 100%; border-radius: 10px; font-size: 0.9rem; }
+    .add-option-btn:hover:not(:disabled) { color: var(--text); border-color: var(--base-blue); background: var(--surface); transform: none; }
+    .send-btn { width: 100%; padding: 1rem; font-size: 1rem; border-radius: 12px; }
+    .proposal { padding: 1.25rem; background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 1rem; }
+    .proposal:last-child { margin-bottom: 0; }
+    .proposal-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.5rem; }
+    .proposal-question { font-size: 1.1rem; font-weight: 600; line-height: 1.3; flex: 1; }
+    .proposal-meta { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 1rem; }
+    .option-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; cursor: pointer; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; transition: border-color 0.15s, background 0.15s; }
+    .option-row.clickable:hover { border-color: var(--base-blue); background: rgba(0,82,255,0.05); }
+    .option-row.disabled { cursor: default; }
+    .option-row.winner { border-color: var(--success); background: rgba(0,210,122,0.05); }
+    .option-text { flex: 1; min-width: 0; word-break: break-word; }
+    .option-pct { font-size: 0.85rem; color: var(--text-dim); font-variant-numeric: tabular-nums; flex-shrink: 0; min-width: 80px; text-align: right; }
+    .option-bar-wrap { width: 100%; height: 4px; background: var(--bg); border-radius: 999px; overflow: hidden; margin-top: 0.4rem; }
+    .option-bar-fill { height: 100%; background: linear-gradient(90deg, var(--base-blue), var(--base-blue-light)); border-radius: 999px; transition: width 0.5s ease; }
+    .option-row.winner .option-bar-fill { background: linear-gradient(90deg, var(--success), #5be0a0); }
+    .empty { color: var(--text-dim); text-align: center; padding: 1.5rem 0; }
+    footer { border-top: 1px solid var(--border); padding: 2rem 1.5rem; text-align: center; color: var(--text-dim); font-size: 0.85rem; }
+    footer a { color: var(--text-dim); margin: 0 0.5rem; }
+    @media (max-width: 600px) {
+      .topbar { padding: 0.85rem 1rem; gap: 0.5rem; }
+      .brand { font-size: 0.95rem; }
+      .net-pill { padding: 0.4rem 0.6rem; font-size: 0.75rem; }
+      .addr-pill { padding: 0.4rem 0.7rem; font-size: 0.8rem; }
+      .hero { padding: 2.5rem 1rem 1.5rem; }
+    }
   </style>
 </head>
 <body>
@@ -47,29 +97,103 @@
     <div class="brand"><span class="icon">🗳️</span><span>vote</span></div>
     <div class="wallet-area" id="wallet-area"><button id="connect-btn">Connect Wallet</button></div>
   </header>
+
   <section class="hero">
     <h1>Base Voting</h1>
-    <p>On-chain polls on Base mainnet.</p>
+    <p>On-chain polls on Base mainnet. One address — one vote per proposal. Tamper-proof, transparent, immutable.</p>
   </section>
+
   <main>
     <div id="network-warning"></div>
-    <section class="card"><h2>Create proposal</h2><p style="color: var(--text-dim);">Owner-only form here.</p></section>
-    <section class="card"><h2>Proposals</h2><p style="color: var(--text-dim);">List here.</p></section>
+
+    <section class="card" id="create-card" style="display: none;">
+      <h2><span>👑 Create proposal</span><span class="badge">owner only</span></h2>
+      <div class="input-row">
+        <label for="question-input">Question</label>
+        <textarea id="question-input" placeholder="What should we build next?" maxlength="200"></textarea>
+      </div>
+      <div class="input-row">
+        <label>Options (2–8)</label>
+        <div class="options-list" id="options-list">
+          <div class="option-input-row"><input type="text" placeholder="Option 1" maxlength="100" /></div>
+          <div class="option-input-row"><input type="text" placeholder="Option 2" maxlength="100" /></div>
+        </div>
+        <button class="add-option-btn" id="add-option-btn" type="button">+ Add option</button>
+      </div>
+      <div class="input-row">
+        <label for="duration-input">Voting duration (hours)</label>
+        <input id="duration-input" type="number" min="1" max="720" value="24" />
+      </div>
+      <button id="create-btn" class="send-btn">Create proposal</button>
+      <div id="create-result"></div>
+    </section>
+
+    <section class="card">
+      <h2><span>Proposals</span><span class="badge live">live</span></h2>
+      <div id="proposals-list">
+        <p class="empty">Connect your wallet to load proposals…</p>
+      </div>
+    </section>
   </main>
-  <footer><p>Powered by Base.</p></footer>
+
+  <footer>
+    <p>Powered by Base · contract on
+      <a href="https://basescan.org/address/0x94482B77E1b7a570FbB68bf4FDcbbdec55326c75" target="_blank" rel="noopener">BaseScan</a></p>
+    <p style="margin-top: 0.5rem;">
+      <a href="https://github.com/hellblade1488/onchain-base" target="_blank" rel="noopener">Source</a>
+    </p>
+  </footer>
 
   <script type="module">
-    import { BrowserProvider } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
+    import { BrowserProvider, Contract } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
+
+    const CONTRACT_ADDRESS = "0x94482B77E1b7a570FbB68bf4FDcbbdec55326c75";
+    const CONTRACT_ABI = [
+      "function createProposal(string calldata _question, string[] calldata _options, uint256 _durationSeconds) external returns (uint256 proposalId)",
+      "function vote(uint256 _proposalId, uint256 _optionIndex) external",
+      "function getProposal(uint256 _proposalId) external view returns (string memory question, string[] memory options, uint256 deadline)",
+      "function totalProposals() external view returns (uint256)",
+      "function voteCounts(uint256, uint256) external view returns (uint256)",
+      "function hasVoted(uint256, address) external view returns (bool)",
+      "function owner() external view returns (address)",
+      "event ProposalCreated(uint256 indexed proposalId, string question, uint256 deadline)",
+      "event Voted(uint256 indexed proposalId, address indexed voter, uint256 optionIndex)"
+    ];
     const BASE_CHAIN_ID = 8453n;
     const BASE_CHAIN_HEX = "0x2105";
+    const BASESCAN_TX = "https://basescan.org/tx/";
+    const BASESCAN_ADDR = "https://basescan.org/address/";
+
     const $ = id => document.getElementById(id);
     const walletArea = $("wallet-area"), networkWarning = $("network-warning");
-    let provider = null, signer = null, userAddress = null, currentChainId = null;
+    const createCard = $("create-card"), createBtn = $("create-btn"), createResult = $("create-result");
+    const questionInput = $("question-input"), optionsList = $("options-list");
+    const addOptionBtn = $("add-option-btn"), durationInput = $("duration-input");
+    const proposalsList = $("proposals-list");
+
+    let provider = null, signer = null, contract = null;
+    let userAddress = null, ownerAddress = null, currentChainId = null;
+
     const DISCONNECTED_KEY = "voting_disconnected";
     function isManuallyDisconnected() { try { return localStorage.getItem(DISCONNECTED_KEY) === "1"; } catch { return false; } }
     function setManuallyDisconnected(v) { try { v ? localStorage.setItem(DISCONNECTED_KEY, "1") : localStorage.removeItem(DISCONNECTED_KEY); } catch {} }
+
     function shortenAddress(a) { return `${a.slice(0,6)}…${a.slice(-4)}`; }
+    function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
     function networkName(id) { const m = { 1n:"Ethereum", 8453n:"Base", 10n:"Optimism", 137n:"Polygon" }; return m[id] || `Chain ${id}`; }
+    function showToast(t, k, h) { t.innerHTML = `<div class="toast ${k}">${h}</div>`; }
+    function timeLeft(deadlineSec) {
+      const now = Math.floor(Date.now() / 1000);
+      const diff = deadlineSec - now;
+      if (diff <= 0) return "Voting closed";
+      const days = Math.floor(diff / 86400);
+      const hours = Math.floor((diff % 86400) / 3600);
+      const mins = Math.floor((diff % 3600) / 60);
+      if (days > 0) return `${days}d ${hours}h left`;
+      if (hours > 0) return `${hours}h ${mins}m left`;
+      return `${mins}m left`;
+    }
+
     function renderConnected(isBase) {
       walletArea.innerHTML = `<button class="net-pill ${isBase ? 'ok' : 'wrong'}" id="net-pill"><span class="net-dot"></span>${isBase ? 'Base' : networkName(currentChainId)}</button><div class="addr-group"><span class="addr-pill"><span class="dot"></span>${shortenAddress(userAddress)}</span><button class="disconnect-btn" id="disconnect-btn" title="Disconnect">×</button></div>`;
       $("net-pill").addEventListener("click", switchToBase);
@@ -79,6 +203,7 @@
       walletArea.innerHTML = `<button id="connect-btn">Connect Wallet</button>`;
       $("connect-btn").addEventListener("click", () => connectWallet(false));
     }
+
     async function checkNetwork() {
       const network = await provider.getNetwork();
       currentChainId = network.chainId;
@@ -94,11 +219,129 @@
       try { await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_CHAIN_HEX }] }); }
       catch (err) { if (err.code === 4902) { await window.ethereum.request({ method: "wallet_addEthereumChain", params: [{ chainId: BASE_CHAIN_HEX, chainName: "Base", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: ["https://mainnet.base.org"], blockExplorerUrls: ["https://basescan.org"] }] }); } }
     }
+
+    addOptionBtn.addEventListener("click", () => {
+      const count = optionsList.querySelectorAll(".option-input-row").length;
+      if (count >= 8) return;
+      const row = document.createElement("div");
+      row.className = "option-input-row";
+      row.innerHTML = `<input type="text" placeholder="Option ${count + 1}" maxlength="100" /><button type="button">×</button>`;
+      row.querySelector("button").addEventListener("click", () => {
+        if (optionsList.querySelectorAll(".option-input-row").length > 2) row.remove();
+      });
+      optionsList.appendChild(row);
+    });
+
+    async function createProposal() {
+      const question = questionInput.value.trim();
+      if (!question) { showToast(createResult, "error", "Question is required."); return; }
+      const options = Array.from(optionsList.querySelectorAll("input")).map(i => i.value.trim()).filter(Boolean);
+      if (options.length < 2 || options.length > 8) { showToast(createResult, "error", "Need 2–8 options."); return; }
+      const hours = parseInt(durationInput.value);
+      if (!hours || hours < 1) { showToast(createResult, "error", "Invalid duration."); return; }
+      const durationSec = hours * 3600;
+
+      createBtn.disabled = true;
+      const original = createBtn.textContent;
+      createBtn.textContent = "Confirm…";
+      try {
+        const tx = await contract.createProposal(question, options, durationSec);
+        createBtn.textContent = "Pending…";
+        showToast(createResult, "success", `Sent: <a href="${BASESCAN_TX}${tx.hash}" target="_blank" rel="noopener">${tx.hash.slice(0,10)}…</a>`);
+        await tx.wait();
+        showToast(createResult, "success", `Proposal created ✓`);
+        questionInput.value = "";
+        optionsList.innerHTML = `<div class="option-input-row"><input type="text" placeholder="Option 1" maxlength="100" /></div><div class="option-input-row"><input type="text" placeholder="Option 2" maxlength="100" /></div>`;
+        await loadProposals();
+      } catch (err) { showToast(createResult, "error", `Failed: ${escapeHtml(err.shortMessage || err.message)}`); }
+      finally { createBtn.textContent = original; createBtn.disabled = false; }
+    }
+
+    async function vote(proposalId, optionIndex) {
+      try {
+        const tx = await contract.vote(proposalId, optionIndex);
+        showToast(createResult, "info", `Voting on #${proposalId}…`);
+        await tx.wait();
+        showToast(createResult, "success", `Voted ✓`);
+        await loadProposals();
+      } catch (err) { showToast(createResult, "error", `Failed: ${escapeHtml(err.shortMessage || err.message)}`); }
+    }
+
+    async function loadProposals() {
+      try {
+        const total = await contract.totalProposals();
+        if (total === 0n) {
+          proposalsList.innerHTML = `<p class="empty">No proposals yet.</p>`;
+          return;
+        }
+        const count = Number(total);
+        const fragments = [];
+        for (let i = count - 1; i >= 0; i--) {
+          const [question, options, deadline] = await contract.getProposal(i);
+          const counts = await Promise.all(options.map((_, idx) => contract.voteCounts(i, idx)));
+          const userVoted = await contract.hasVoted(i, userAddress);
+          const totalVotes = counts.reduce((a, b) => a + Number(b), 0);
+          const now = Math.floor(Date.now() / 1000);
+          const isClosed = Number(deadline) <= now;
+          const maxCount = Math.max(...counts.map(Number));
+
+          const optionsHtml = options.map((opt, idx) => {
+            const cnt = Number(counts[idx]);
+            const pct = totalVotes === 0 ? 0 : Math.round(cnt / totalVotes * 100);
+            const isWinner = isClosed && cnt > 0 && cnt === maxCount;
+            const canVote = !userVoted && !isClosed;
+            return `
+              <div class="option-row ${canVote ? 'clickable' : 'disabled'} ${isWinner ? 'winner' : ''}" ${canVote ? `data-pid="${i}" data-oid="${idx}"` : ''}>
+                <div style="flex: 1; min-width: 0;">
+                  <div class="option-text">${escapeHtml(opt)}</div>
+                  <div class="option-bar-wrap"><div class="option-bar-fill" style="width: ${pct}%;"></div></div>
+                </div>
+                <div class="option-pct">${cnt} · ${pct}%</div>
+              </div>
+            `;
+          }).join("");
+
+          const statusBadge = userVoted
+            ? `<span class="badge voted">voted</span>`
+            : isClosed ? `<span class="badge closed">closed</span>` : `<span class="badge live">open</span>`;
+
+          fragments.push(`
+            <div class="proposal" data-pid="${i}">
+              <div class="proposal-header">
+                <div class="proposal-question">#${i} · ${escapeHtml(question)}</div>
+                ${statusBadge}
+              </div>
+              <div class="proposal-meta">${timeLeft(Number(deadline))} · ${totalVotes} vote${totalVotes === 1 ? '' : 's'}</div>
+              ${optionsHtml}
+            </div>
+          `);
+        }
+        proposalsList.innerHTML = fragments.join("");
+        proposalsList.querySelectorAll(".option-row.clickable").forEach(row => {
+          row.addEventListener("click", () => vote(row.dataset.pid, row.dataset.oid));
+        });
+      } catch (err) {
+        console.error(err);
+        proposalsList.innerHTML = `<p class="empty">Failed to load proposals.</p>`;
+      }
+    }
+
+    function listenForEvents() {
+      try {
+        contract.on("ProposalCreated", () => loadProposals());
+        contract.on("Voted", () => loadProposals());
+      } catch (e) { console.warn(e); }
+    }
+
     function disconnectWallet() {
       setManuallyDisconnected(true);
-      provider = null; signer = null; userAddress = null; currentChainId = null;
+      try { if (contract) contract.removeAllListeners(); } catch {}
+      provider = null; signer = null; contract = null; userAddress = null; ownerAddress = null; currentChainId = null;
       renderDisconnected(); networkWarning.innerHTML = "";
+      createCard.style.display = "none";
+      proposalsList.innerHTML = `<p class="empty">Connect your wallet to load proposals…</p>`;
     }
+
     async function connectWallet(silent = false) {
       if (!window.ethereum) { if (!silent) alert("No wallet detected."); return; }
       try {
@@ -111,9 +354,19 @@
         const network = await provider.getNetwork();
         currentChainId = network.chainId;
         renderConnected(network.chainId === BASE_CHAIN_ID);
-        await checkNetwork();
+        const ok = await checkNetwork();
+        if (!ok) return;
+        contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+        ownerAddress = await contract.owner();
+        if (userAddress.toLowerCase() === ownerAddress.toLowerCase()) {
+          createCard.style.display = "block";
+        }
+        await loadProposals();
+        listenForEvents();
       } catch (err) { console.error(err); renderDisconnected(); }
     }
+
+    createBtn.addEventListener("click", createProposal);
     renderDisconnected();
     (async () => { if (!isManuallyDisconnected()) await connectWallet(true); })();
     if (window.ethereum) { window.ethereum.on("chainChanged", () => window.location.reload()); window.ethereum.on("accountsChanged", () => window.location.reload()); }
