@@ -25,7 +25,7 @@ once per proposal — fully tamper-proof and on-chain.
 
 ## Live demo
 
-`https://hellblade1488.github.io/onchain-base/dapps/voting/`
+[hellblade1488.github.io/onchain-base/dapps/voting/](https://hellblade1488.github.io/onchain-base/dapps/voting/)
 
 ## Contract
 
@@ -34,6 +34,15 @@ once per proposal — fully tamper-proof and on-chain.
 | Address | [`0x94482B77E1b7a570FbB68bf4FDcbbdec55326c75`](https://basescan.org/address/0x94482B77E1b7a570FbB68bf4FDcbbdec55326c75) |
 | Network | Base mainnet (chain id `8453`) |
 | Source | [`contracts/3_SimpleVoting.sol`](../../contracts/3_SimpleVoting.sol) |
+
+## Sibling dApps
+
+Other dApps in this repo:
+
+- [**guestbook**](../guestbook/) — public on-chain guestbook
+- [**tipjar**](../tipjar/) — send ETH on Base with a public note
+- [**vault**](../vault/) — time-locked ETH savings
+- [**todo**](../todo/) — personal todo list on chain
 
 ## License
 
