@@ -19,21 +19,10 @@ left by other people.
 
 - Pure HTML + CSS + JavaScript — no build step
 - [ethers.js v6](https://docs.ethers.org/v6/) loaded from a CDN
-- Talks directly to the on-chain contract on Base
-
-## Run locally
-
-Just open `index.html` in any modern browser. No server needed.
-For best results (some wallets prefer http(s)), serve it with any static file server, e.g.:
-
-```sh
-npx serve .
-```
 
 ## Live demo
 
-Once GitHub Pages is enabled for this repo, the dApp will be available at:
-`https://hellblade1488.github.io/onchain-base/dapps/guestbook/`
+[hellblade1488.github.io/onchain-base/dapps/guestbook/](https://hellblade1488.github.io/onchain-base/dapps/guestbook/)
 
 ## Contract
 
@@ -43,6 +32,15 @@ Once GitHub Pages is enabled for this repo, the dApp will be available at:
 | Network | Base mainnet (chain id `8453`) |
 | Source | [`contracts/1_GuestBook.sol`](../../contracts/1_GuestBook.sol) |
 | Verified | [Sourcify](https://repo.sourcify.dev/8453/0x701546B92991CAC01f98c9aaB3AB8C8dd6d1999f) |
+
+## Sibling dApps
+
+Other dApps in this repo:
+
+- [**tipjar**](../tipjar/) — send ETH on Base with a public note
+- [**voting**](../voting/) — on-chain polls
+- [**vault**](../vault/) — time-locked ETH savings
+- [**todo**](../todo/) — personal todo list on chain
 
 ## License
 
