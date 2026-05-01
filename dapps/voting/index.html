@@ -8,8 +8,9 @@
   <style>
     :root {
       --base-blue: #0052ff; --base-blue-dark: #003ecc; --base-blue-light: #5b8eff;
-      --bg: #05060d; --bg-2: #0a0c18; --surface: #11142a;
+      --bg: #05060d; --bg-2: #0a0c18; --surface: #11142a; --surface-2: #1a1d3a;
       --text: #f5f5fa; --text-dim: #8a8aa0; --border: #232845;
+      --warn: #ff9d00; --error: #ff4d6d; --success: #00d27a;
       --radius: 14px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -17,8 +18,21 @@
     .topbar { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 2rem; border-bottom: 1px solid var(--border); backdrop-filter: blur(8px); background: rgba(5,6,13,0.6); position: sticky; top: 0; z-index: 10; }
     .brand { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
     .brand .icon { font-size: 1.4rem; }
+    .wallet-area { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; }
     button { background: var(--base-blue); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 999px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: transform 0.1s, background 0.15s; font-family: inherit; }
-    button:hover { background: var(--base-blue-dark); transform: translateY(-1px); }
+    button:hover:not(:disabled) { background: var(--base-blue-dark); transform: translateY(-1px); }
+    button:disabled { background: var(--border); cursor: not-allowed; opacity: 0.6; }
+    .net-pill { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.8rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); }
+    .net-pill.ok { background: rgba(0,82,255,0.12); color: var(--base-blue-light); border-color: rgba(0,82,255,0.4); }
+    .net-pill.wrong { background: rgba(255,157,0,0.12); color: var(--warn); border-color: rgba(255,157,0,0.5); }
+    .net-pill .net-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 6px currentColor; }
+    .addr-group { display: inline-flex; align-items: center; background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+    .addr-pill { padding: 0.5rem 0.9rem; font-family: ui-monospace, monospace; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem; }
+    .addr-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); }
+    .disconnect-btn { background: transparent; border: none; border-left: 1px solid var(--border); color: var(--text-dim); padding: 0 0.7rem; align-self: stretch; font-size: 1.1rem; cursor: pointer; border-radius: 0; }
+    .disconnect-btn:hover { background: rgba(255,77,109,0.15); color: var(--error); transform: none; }
+    .warn-banner { background: rgba(255,157,0,0.1); border: 1px solid var(--warn); color: var(--warn); padding: 0.85rem 1rem; border-radius: 10px; margin: 1rem 0; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    .warn-banner button { background: var(--warn); color: var(--bg); padding: 0.4rem 0.9rem; font-size: 0.85rem; }
     .hero { text-align: center; padding: 4rem 2rem 2rem; max-width: 720px; margin: 0 auto; }
     .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg, #ffffff 0%, var(--base-blue-light) 50%, var(--base-blue) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.05; margin-bottom: 1rem; }
     .hero p { color: var(--text-dim); font-size: 1.1rem; max-width: 480px; margin: 0 auto; }
@@ -31,16 +45,78 @@
 <body>
   <header class="topbar">
     <div class="brand"><span class="icon">🗳️</span><span>vote</span></div>
-    <div class="wallet-area"><button id="connect-btn">Connect Wallet</button></div>
+    <div class="wallet-area" id="wallet-area"><button id="connect-btn">Connect Wallet</button></div>
   </header>
   <section class="hero">
     <h1>Base Voting</h1>
-    <p>On-chain polls on Base mainnet. One address — one vote per proposal.</p>
+    <p>On-chain polls on Base mainnet.</p>
   </section>
   <main>
+    <div id="network-warning"></div>
     <section class="card"><h2>Create proposal</h2><p style="color: var(--text-dim);">Owner-only form here.</p></section>
     <section class="card"><h2>Proposals</h2><p style="color: var(--text-dim);">List here.</p></section>
   </main>
   <footer><p>Powered by Base.</p></footer>
+
+  <script type="module">
+    import { BrowserProvider } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
+    const BASE_CHAIN_ID = 8453n;
+    const BASE_CHAIN_HEX = "0x2105";
+    const $ = id => document.getElementById(id);
+    const walletArea = $("wallet-area"), networkWarning = $("network-warning");
+    let provider = null, signer = null, userAddress = null, currentChainId = null;
+    const DISCONNECTED_KEY = "voting_disconnected";
+    function isManuallyDisconnected() { try { return localStorage.getItem(DISCONNECTED_KEY) === "1"; } catch { return false; } }
+    function setManuallyDisconnected(v) { try { v ? localStorage.setItem(DISCONNECTED_KEY, "1") : localStorage.removeItem(DISCONNECTED_KEY); } catch {} }
+    function shortenAddress(a) { return `${a.slice(0,6)}…${a.slice(-4)}`; }
+    function networkName(id) { const m = { 1n:"Ethereum", 8453n:"Base", 10n:"Optimism", 137n:"Polygon" }; return m[id] || `Chain ${id}`; }
+    function renderConnected(isBase) {
+      walletArea.innerHTML = `<button class="net-pill ${isBase ? 'ok' : 'wrong'}" id="net-pill"><span class="net-dot"></span>${isBase ? 'Base' : networkName(currentChainId)}</button><div class="addr-group"><span class="addr-pill"><span class="dot"></span>${shortenAddress(userAddress)}</span><button class="disconnect-btn" id="disconnect-btn" title="Disconnect">×</button></div>`;
+      $("net-pill").addEventListener("click", switchToBase);
+      $("disconnect-btn").addEventListener("click", disconnectWallet);
+    }
+    function renderDisconnected() {
+      walletArea.innerHTML = `<button id="connect-btn">Connect Wallet</button>`;
+      $("connect-btn").addEventListener("click", () => connectWallet(false));
+    }
+    async function checkNetwork() {
+      const network = await provider.getNetwork();
+      currentChainId = network.chainId;
+      if (network.chainId !== BASE_CHAIN_ID) {
+        networkWarning.innerHTML = `<div class="warn-banner"><span>Wrong network (${networkName(network.chainId)}).</span><button id="switch-btn">Switch to Base</button></div>`;
+        $("switch-btn").addEventListener("click", switchToBase);
+        return false;
+      }
+      networkWarning.innerHTML = "";
+      return true;
+    }
+    async function switchToBase() {
+      try { await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_CHAIN_HEX }] }); }
+      catch (err) { if (err.code === 4902) { await window.ethereum.request({ method: "wallet_addEthereumChain", params: [{ chainId: BASE_CHAIN_HEX, chainName: "Base", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: ["https://mainnet.base.org"], blockExplorerUrls: ["https://basescan.org"] }] }); } }
+    }
+    function disconnectWallet() {
+      setManuallyDisconnected(true);
+      provider = null; signer = null; userAddress = null; currentChainId = null;
+      renderDisconnected(); networkWarning.innerHTML = "";
+    }
+    async function connectWallet(silent = false) {
+      if (!window.ethereum) { if (!silent) alert("No wallet detected."); return; }
+      try {
+        provider = new BrowserProvider(window.ethereum);
+        if (silent === true) { const accs = await window.ethereum.request({ method: "eth_accounts" }); if (!accs || accs.length === 0) return; }
+        else { await provider.send("eth_requestAccounts", []); }
+        setManuallyDisconnected(false);
+        signer = await provider.getSigner();
+        userAddress = await signer.getAddress();
+        const network = await provider.getNetwork();
+        currentChainId = network.chainId;
+        renderConnected(network.chainId === BASE_CHAIN_ID);
+        await checkNetwork();
+      } catch (err) { console.error(err); renderDisconnected(); }
+    }
+    renderDisconnected();
+    (async () => { if (!isManuallyDisconnected()) await connectWallet(true); })();
+    if (window.ethereum) { window.ethereum.on("chainChanged", () => window.location.reload()); window.ethereum.on("accountsChanged", () => window.location.reload()); }
+  </script>
 </body>
 </html>
