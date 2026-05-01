@@ -25,7 +25,7 @@ cannot pull the funds out before time.
 
 ## Live demo
 
-`https://hellblade1488.github.io/onchain-base/dapps/vault/`
+[hellblade1488.github.io/onchain-base/dapps/vault/](https://hellblade1488.github.io/onchain-base/dapps/vault/)
 
 ## Contract
 
@@ -34,6 +34,15 @@ cannot pull the funds out before time.
 | Address | [`0x4b115F329ab9EF584cDFbD81b7aA0BeDAf75C9ed`](https://basescan.org/address/0x4b115F329ab9EF584cDFbD81b7aA0BeDAf75C9ed) |
 | Network | Base mainnet (chain id `8453`) |
 | Source | [`contracts/4_TimeLockedSavings.sol`](../../contracts/4_TimeLockedSavings.sol) |
+
+## Sibling dApps
+
+Other dApps in this repo:
+
+- [**guestbook**](../guestbook/) — public on-chain guestbook
+- [**tipjar**](../tipjar/) — send ETH on Base with a public note
+- [**voting**](../voting/) — on-chain polls
+- [**todo**](../todo/) — personal todo list on chain
 
 ## License
 
