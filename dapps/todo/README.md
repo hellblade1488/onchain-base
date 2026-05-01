@@ -25,7 +25,7 @@ forever in the contract.
 
 ## Live demo
 
-`https://hellblade1488.github.io/onchain-base/dapps/todo/`
+[hellblade1488.github.io/onchain-base/dapps/todo/](https://hellblade1488.github.io/onchain-base/dapps/todo/)
 
 ## Contract
 
@@ -34,6 +34,15 @@ forever in the contract.
 | Address | [`0x3b96111b2e59aCbaCfD8240cc6B24504489Ef06D`](https://basescan.org/address/0x3b96111b2e59aCbaCfD8240cc6B24504489Ef06D) |
 | Network | Base mainnet (chain id `8453`) |
 | Source | [`contracts/5_OnChainTodo.sol`](../../contracts/5_OnChainTodo.sol) |
+
+## Sibling dApps
+
+Other dApps in this repo:
+
+- [**guestbook**](../guestbook/) — public on-chain guestbook
+- [**tipjar**](../tipjar/) — send ETH on Base with a public note
+- [**voting**](../voting/) — on-chain polls
+- [**vault**](../vault/) — time-locked ETH savings
 
 ## License
 
