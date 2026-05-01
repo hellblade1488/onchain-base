@@ -4,24 +4,53 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ETH Vault</title>
+  <meta name="description" content="Time-locked ETH vault on Base. Lock your ETH until a chosen date — even you cannot pull it out before time." />
+  <meta property="og:title" content="ETH Vault · time-locked savings on Base" />
+  <meta property="og:description" content="Lock ETH until a chosen date on Base mainnet. No admin override." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%230052ff%22/><text x=%2250%22 y=%2272%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22sans-serif%22 font-weight=%22bold%22>🔒</text></svg>" />
+  <title>ETH Vault · time-locked savings on Base</title>
   <style>
     :root {
-      --base-blue: #0052ff; --base-blue-dark: #003ecc; --base-blue-light: #5b8eff;
-      --bg: #05060d; --bg-2: #0a0c18; --surface: #11142a; --surface-2: #1a1d3a;
-      --text: #f5f5fa; --text-dim: #8a8aa0; --border: #232845;
-      --warn: #ff9d00; --error: #ff4d6d; --success: #00d27a;
+      --base-blue: #0052ff;
+      --base-blue-dark: #003ecc;
+      --base-blue-light: #5b8eff;
+      --bg: #05060d;
+      --bg-2: #0a0c18;
+      --surface: #11142a;
+      --surface-2: #1a1d3a;
+      --text: #f5f5fa;
+      --text-dim: #8a8aa0;
+      --border: #232845;
+      --warn: #ff9d00;
+      --error: #ff4d6d;
+      --success: #00d27a;
       --radius: 14px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,82,255,0.18), transparent 70%), var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0,82,255,0.18), transparent 70%),
+        radial-gradient(ellipse 60% 60% at 80% 100%, rgba(91,142,255,0.10), transparent 70%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    a { color: var(--base-blue-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
     .topbar { display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 2rem; border-bottom: 1px solid var(--border); backdrop-filter: blur(8px); background: rgba(5,6,13,0.6); position: sticky; top: 0; z-index: 10; }
     .brand { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
     .brand .icon { font-size: 1.4rem; }
     .wallet-area { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end; }
+
     button { background: var(--base-blue); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 999px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: transform 0.1s, background 0.15s; font-family: inherit; }
     button:hover:not(:disabled) { background: var(--base-blue-dark); transform: translateY(-1px); }
     button:disabled { background: var(--border); cursor: not-allowed; opacity: 0.6; }
+
     .net-pill { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.8rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: 1px solid var(--border); }
     .net-pill.ok { background: rgba(0,82,255,0.12); color: var(--base-blue-light); border-color: rgba(0,82,255,0.4); }
     .net-pill.wrong { background: rgba(255,157,0,0.12); color: var(--warn); border-color: rgba(255,157,0,0.5); }
@@ -31,48 +60,233 @@
     .addr-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); }
     .disconnect-btn { background: transparent; border: none; border-left: 1px solid var(--border); color: var(--text-dim); padding: 0 0.7rem; align-self: stretch; font-size: 1.1rem; cursor: pointer; border-radius: 0; }
     .disconnect-btn:hover { background: rgba(255,77,109,0.15); color: var(--error); transform: none; }
-    .warn-banner { background: rgba(255,157,0,0.1); border: 1px solid var(--warn); color: var(--warn); padding: 0.85rem 1rem; border-radius: 10px; margin: 1rem 0; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-    .warn-banner button { background: var(--warn); color: var(--bg); padding: 0.4rem 0.9rem; font-size: 0.85rem; }
+
     .hero { text-align: center; padding: 4rem 2rem 2rem; max-width: 720px; margin: 0 auto; }
     .hero h1 { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg, #ffffff 0%, var(--base-blue-light) 50%, var(--base-blue) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.05; margin-bottom: 1rem; }
     .hero p { color: var(--text-dim); font-size: 1.1rem; max-width: 480px; margin: 0 auto; }
+
     main { max-width: 640px; margin: 0 auto; padding: 0 1.5rem 4rem; }
     .card { background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.25rem; box-shadow: 0 4px 24px -8px rgba(0,82,255,0.15); }
-    .card h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; }
-    footer { padding: 2rem; text-align: center; color: var(--text-dim); border-top: 1px solid var(--border); }
+    .card h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; }
+    .badge { background: var(--base-blue); color: white; font-size: 0.7rem; padding: 0.2rem 0.6rem; border-radius: 999px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+    .badge.live { background: var(--success); }
+    .badge.unlocked { background: var(--success); }
+    .badge.locked { background: var(--warn); }
+
+    .vault-card { border: 1px solid var(--base-blue); background: linear-gradient(135deg, rgba(0,82,255,0.12), var(--surface)); }
+    .vault-amount { text-align: center; font-size: 2.5rem; font-weight: 800; color: var(--base-blue-light); margin: 0.5rem 0 0.25rem; }
+    .vault-amount-label { text-align: center; font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 1rem; }
+
+    .countdown { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin: 1rem 0; }
+    .countdown-cell { background: var(--bg-2); border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 0.5rem; text-align: center; }
+    .countdown-value { font-size: 1.6rem; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1; }
+    .countdown-label { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.35rem; }
+
+    .progress-bar { width: 100%; height: 6px; background: var(--bg-2); border-radius: 999px; margin-top: 0.5rem; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--base-blue), var(--success)); border-radius: 999px; transition: width 0.5s ease; }
+    .progress-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-dim); margin-top: 0.4rem; }
+
+    .empty { color: var(--text-dim); text-align: center; padding: 1.5rem 0; }
+    label { display: block; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem; font-weight: 500; }
+    input[type="number"], input[type="datetime-local"], input[type="text"] {
+      width: 100%; background: var(--bg-2); color: var(--text);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 0.85rem 1rem; font-family: inherit; font-size: 1rem;
+      transition: border-color 0.15s;
+      color-scheme: dark;
+    }
+    input:focus { outline: none; border-color: var(--base-blue); box-shadow: 0 0 0 3px rgba(0,82,255,0.15); }
+    .input-row { margin-bottom: 1rem; }
+
+    .preset-durations { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .preset-durations button { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 0.85rem; font-size: 0.85rem; border-radius: 8px; flex: 1; min-width: 0; }
+    .preset-durations button:hover:not(:disabled) { background: var(--surface); border-color: var(--base-blue); }
+    .preset-durations button.active { background: var(--base-blue); border-color: var(--base-blue); color: white; }
+
+    .send-btn { width: 100%; padding: 1rem; font-size: 1rem; border-radius: 12px; }
+    .send-btn.success-btn { background: var(--success); }
+    .send-btn.success-btn:hover:not(:disabled) { background: #00b86a; }
+
+    .toast { padding: 0.75rem 1rem; border-radius: 10px; margin-top: 1rem; font-size: 0.9rem; border: 1px solid transparent; }
+    .toast.success { background: rgba(0,210,122,0.1); border-color: var(--success); color: var(--success); }
+    .toast.error { background: rgba(255,77,109,0.1); border-color: var(--error); color: var(--error); }
+    .toast.info { background: rgba(91,142,255,0.1); border-color: var(--base-blue-light); color: var(--base-blue-light); }
+
+    .lookup-row { display: flex; gap: 0.5rem; }
+    .lookup-row input { flex: 1; font-family: ui-monospace, monospace; font-size: 0.9rem; }
+    .lookup-row button { padding: 0.85rem 1.2rem; border-radius: 10px; }
+
+    .warn-banner { background: rgba(255,157,0,0.1); border: 1px solid var(--warn); color: var(--warn); padding: 0.85rem 1rem; border-radius: 10px; margin: 1rem 0; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    .warn-banner button { background: var(--warn); color: var(--bg); padding: 0.4rem 0.9rem; font-size: 0.85rem; }
+
+    footer { border-top: 1px solid var(--border); padding: 2rem 1.5rem; text-align: center; color: var(--text-dim); font-size: 0.85rem; }
+    footer a { color: var(--text-dim); margin: 0 0.5rem; }
+
+    @media (max-width: 600px) {
+      .topbar { padding: 0.85rem 1rem; gap: 0.5rem; }
+      .brand { font-size: 0.95rem; }
+      .net-pill { padding: 0.4rem 0.6rem; font-size: 0.75rem; }
+      .addr-pill { padding: 0.4rem 0.7rem; font-size: 0.8rem; }
+      .hero { padding: 2.5rem 1rem 1.5rem; }
+      .vault-amount { font-size: 2rem; }
+      .countdown-value { font-size: 1.2rem; }
+    }
   </style>
 </head>
 <body>
+
   <header class="topbar">
-    <div class="brand"><span class="icon">🔒</span><span>vault</span></div>
-    <div class="wallet-area" id="wallet-area"><button id="connect-btn">Connect Wallet</button></div>
+    <div class="brand">
+      <span class="icon">🔒</span>
+      <span>vault</span>
+    </div>
+    <div class="wallet-area" id="wallet-area">
+      <button id="connect-btn">Connect Wallet</button>
+    </div>
   </header>
+
   <section class="hero">
     <h1>ETH Vault</h1>
-    <p>Lock your ETH on Base until a chosen date.</p>
+    <p>Lock your ETH on Base until a chosen date. Even you cannot pull it out before time — no admin override, no escape.</p>
   </section>
+
   <main>
+
     <div id="network-warning"></div>
-    <section class="card"><h2>Your vault</h2><p style="color: var(--text-dim);">Lock status here.</p></section>
-    <section class="card"><h2>Lock ETH</h2><p style="color: var(--text-dim);">Deposit form here.</p></section>
-    <section class="card"><h2>Top up</h2><p style="color: var(--text-dim);">Top-up form here.</p></section>
-    <section class="card"><h2>Withdraw</h2><p style="color: var(--text-dim);">Withdraw button here.</p></section>
-    <section class="card"><h2>Look up someone else</h2><p style="color: var(--text-dim);">Lookup here.</p></section>
+
+    <section class="card vault-card" id="vault-card" style="display: none;">
+      <h2>
+        <span id="vault-title">Your vault</span>
+        <span class="badge" id="vault-status">—</span>
+      </h2>
+      <div class="vault-amount" id="vault-amount">— ETH</div>
+      <div class="vault-amount-label">Locked</div>
+      <div class="countdown" id="countdown">
+        <div class="countdown-cell"><div class="countdown-value" id="cd-d">0</div><div class="countdown-label">days</div></div>
+        <div class="countdown-cell"><div class="countdown-value" id="cd-h">0</div><div class="countdown-label">hours</div></div>
+        <div class="countdown-cell"><div class="countdown-value" id="cd-m">0</div><div class="countdown-label">mins</div></div>
+        <div class="countdown-cell"><div class="countdown-value" id="cd-s">0</div><div class="countdown-label">secs</div></div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width: 0%;"></div></div>
+      <div class="progress-meta">
+        <span id="progress-start">Locked</span>
+        <span id="progress-end">Unlocks</span>
+      </div>
+    </section>
+
+    <section class="card" id="empty-card">
+      <h2>No vault yet</h2>
+      <p style="color: var(--text-dim);">You don't have any ETH locked. Use the form below to create your first lock.</p>
+    </section>
+
+    <section class="card" id="deposit-card">
+      <h2 id="deposit-title">Lock ETH</h2>
+      <div class="input-row">
+        <label for="amount-input">Amount (ETH)</label>
+        <input id="amount-input" type="number" step="0.0001" min="0" placeholder="0.005" />
+      </div>
+      <div class="input-row">
+        <label>Unlock duration</label>
+        <div class="preset-durations">
+          <button data-days="1" type="button">1 day</button>
+          <button data-days="7" type="button">7 days</button>
+          <button data-days="30" type="button">30 days</button>
+          <button data-days="365" type="button">1 year</button>
+        </div>
+      </div>
+      <div class="input-row">
+        <label for="unlock-input">Or pick custom date/time</label>
+        <input id="unlock-input" type="datetime-local" />
+      </div>
+      <button id="deposit-btn" class="send-btn" disabled>Lock ETH</button>
+      <div id="deposit-result"></div>
+    </section>
+
+    <section class="card" id="topup-card" style="display: none;">
+      <h2>Top up</h2>
+      <p style="color: var(--text-dim); margin-bottom: 1rem; font-size: 0.9rem;">Add more ETH to your existing lock without changing the unlock time.</p>
+      <div class="input-row">
+        <label for="topup-amount">Amount (ETH)</label>
+        <input id="topup-amount" type="number" step="0.0001" min="0" placeholder="0.001" />
+      </div>
+      <button id="topup-btn" class="send-btn" disabled>Top up</button>
+      <div id="topup-result"></div>
+    </section>
+
+    <section class="card" id="withdraw-card" style="display: none;">
+      <h2>👑 Withdraw</h2>
+      <p style="color: var(--text-dim); margin-bottom: 1rem; font-size: 0.9rem;" id="withdraw-hint">Available after the unlock time.</p>
+      <button id="withdraw-btn" class="send-btn success-btn" disabled>Withdraw all</button>
+      <div id="withdraw-result"></div>
+    </section>
+
+    <section class="card">
+      <h2>Look up someone else</h2>
+      <div class="lookup-row">
+        <input id="lookup-input" type="text" placeholder="0x… address" />
+        <button id="lookup-btn">View</button>
+      </div>
+      <div id="lookup-result" style="margin-top: 1rem;"></div>
+    </section>
+
   </main>
-  <footer><p>Powered by Base.</p></footer>
+
+  <footer>
+    <p>Powered by Base · contract on
+      <a href="https://basescan.org/address/0x4b115F329ab9EF584cDFbD81b7aA0BeDAf75C9ed" target="_blank" rel="noopener">BaseScan</a></p>
+    <p style="margin-top: 0.5rem;">
+      <a href="https://github.com/hellblade1488/onchain-base" target="_blank" rel="noopener">Source</a>
+    </p>
+  </footer>
 
   <script type="module">
-    import { BrowserProvider } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
+    import { BrowserProvider, Contract, JsonRpcProvider, parseEther, formatEther, isAddress } from "https://cdn.jsdelivr.net/npm/ethers@6.13.0/+esm";
+
+    const CONTRACT_ADDRESS = "0x4b115F329ab9EF584cDFbD81b7aA0BeDAf75C9ed";
+    const CONTRACT_ABI = [
+      "function deposit(uint256 _unlockTime) external payable",
+      "function topUp() external payable",
+      "function withdraw() external",
+      "function locks(address) external view returns (uint256 amount, uint256 unlockTime)",
+      "function timeRemaining(address _user) external view returns (uint256)",
+      "event Deposited(address indexed user, uint256 amount, uint256 unlockTime)",
+      "event ToppedUp(address indexed user, uint256 amount)",
+      "event Withdrawn(address indexed user, uint256 amount)"
+    ];
     const BASE_CHAIN_ID = 8453n;
     const BASE_CHAIN_HEX = "0x2105";
+    const BASE_RPC = "https://mainnet.base.org";
+    const BASESCAN_TX = "https://basescan.org/tx/";
+    const BASESCAN_ADDR = "https://basescan.org/address/";
+
     const $ = id => document.getElementById(id);
     const walletArea = $("wallet-area"), networkWarning = $("network-warning");
-    let provider = null, signer = null, userAddress = null, currentChainId = null;
+    const vaultCard = $("vault-card"), emptyCard = $("empty-card");
+    const vaultTitle = $("vault-title"), vaultStatus = $("vault-status"), vaultAmount = $("vault-amount");
+    const cdD = $("cd-d"), cdH = $("cd-h"), cdM = $("cd-m"), cdS = $("cd-s");
+    const progressFill = $("progress-fill"), progressStart = $("progress-start"), progressEnd = $("progress-end");
+    const amountInput = $("amount-input"), unlockInput = $("unlock-input"), depositBtn = $("deposit-btn"), depositResult = $("deposit-result"), depositTitle = $("deposit-title");
+    const topupCard = $("topup-card"), topupAmount = $("topup-amount"), topupBtn = $("topup-btn"), topupResult = $("topup-result");
+    const withdrawCard = $("withdraw-card"), withdrawBtn = $("withdraw-btn"), withdrawHint = $("withdraw-hint"), withdrawResult = $("withdraw-result");
+    const lookupInput = $("lookup-input"), lookupBtn = $("lookup-btn"), lookupResult = $("lookup-result");
+    const presetButtons = document.querySelectorAll(".preset-durations button");
+
+    let provider = null, signer = null, contract = null;
+    let userAddress = null, currentChainId = null;
+    let countdownInterval = null;
+    // Cached lock state for currently displayed user (own or looked up)
+    let displayedLock = null; // { amount, unlockTime, lockedAt }
+
     const DISCONNECTED_KEY = "vault_disconnected";
     function isManuallyDisconnected() { try { return localStorage.getItem(DISCONNECTED_KEY) === "1"; } catch { return false; } }
     function setManuallyDisconnected(v) { try { v ? localStorage.setItem(DISCONNECTED_KEY, "1") : localStorage.removeItem(DISCONNECTED_KEY); } catch {} }
+
     function shortenAddress(a) { return `${a.slice(0,6)}…${a.slice(-4)}`; }
+    function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+    function formatEth(wei) { return parseFloat(formatEther(wei)).toFixed(4); }
     function networkName(id) { const m = { 1n:"Ethereum", 8453n:"Base", 10n:"Optimism", 137n:"Polygon" }; return m[id] || `Chain ${id}`; }
+    function showToast(t, k, h) { t.innerHTML = `<div class="toast ${k}">${h}</div>`; }
+
     function renderConnected(isBase) {
       walletArea.innerHTML = `<button class="net-pill ${isBase ? 'ok' : 'wrong'}" id="net-pill"><span class="net-dot"></span>${isBase ? 'Base' : networkName(currentChainId)}</button><div class="addr-group"><span class="addr-pill"><span class="dot"></span>${shortenAddress(userAddress)}</span><button class="disconnect-btn" id="disconnect-btn" title="Disconnect">×</button></div>`;
       $("net-pill").addEventListener("click", switchToBase);
@@ -82,26 +296,254 @@
       walletArea.innerHTML = `<button id="connect-btn">Connect Wallet</button>`;
       $("connect-btn").addEventListener("click", () => connectWallet(false));
     }
+
     async function checkNetwork() {
       const network = await provider.getNetwork();
       currentChainId = network.chainId;
       if (network.chainId !== BASE_CHAIN_ID) {
-        networkWarning.innerHTML = `<div class="warn-banner"><span>Wrong network (${networkName(network.chainId)}).</span><button id="switch-btn">Switch to Base</button></div>`;
+        networkWarning.innerHTML = `<div class="warn-banner"><span>You're on <b>${networkName(network.chainId)}</b>. Switch to Base.</span><button id="switch-btn">Switch to Base</button></div>`;
         $("switch-btn").addEventListener("click", switchToBase);
         return false;
       }
       networkWarning.innerHTML = "";
       return true;
     }
+
     async function switchToBase() {
       try { await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: BASE_CHAIN_HEX }] }); }
-      catch (err) { if (err.code === 4902) { await window.ethereum.request({ method: "wallet_addEthereumChain", params: [{ chainId: BASE_CHAIN_HEX, chainName: "Base", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: ["https://mainnet.base.org"], blockExplorerUrls: ["https://basescan.org"] }] }); } }
+      catch (err) { if (err.code === 4902) { await window.ethereum.request({ method: "wallet_addEthereumChain", params: [{ chainId: BASE_CHAIN_HEX, chainName: "Base", nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 }, rpcUrls: [BASE_RPC], blockExplorerUrls: ["https://basescan.org"] }] }); } }
     }
+
+    function startCountdown() {
+      stopCountdown();
+      tickCountdown();
+      countdownInterval = setInterval(tickCountdown, 1000);
+    }
+    function stopCountdown() {
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+    function tickCountdown() {
+      if (!displayedLock) return;
+      const now = Math.floor(Date.now() / 1000);
+      const remaining = Math.max(0, Number(displayedLock.unlockTime) - now);
+      const days = Math.floor(remaining / 86400);
+      const hours = Math.floor((remaining % 86400) / 3600);
+      const mins = Math.floor((remaining % 3600) / 60);
+      const secs = remaining % 60;
+      cdD.textContent = days; cdH.textContent = hours; cdM.textContent = mins; cdS.textContent = secs;
+
+      // Progress: time elapsed since lockedAt vs total duration
+      const lockedAt = Number(displayedLock.lockedAt || (displayedLock.unlockTime - 86400));
+      const total = Number(displayedLock.unlockTime) - lockedAt;
+      const elapsed = now - lockedAt;
+      const pct = total > 0 ? Math.min(100, Math.max(0, (elapsed / total) * 100)) : 100;
+      progressFill.style.width = `${pct}%`;
+
+      if (remaining === 0) {
+        vaultStatus.textContent = "Unlocked";
+        vaultStatus.className = "badge unlocked";
+        if (displayedLock.isMine) {
+          withdrawBtn.disabled = false;
+          withdrawHint.textContent = "Your funds are unlocked. Click below to withdraw.";
+        }
+      } else {
+        vaultStatus.textContent = "Locked";
+        vaultStatus.className = "badge locked";
+      }
+    }
+
+    async function loadMyLock() {
+      try {
+        const lock = await contract.locks(userAddress);
+        if (lock.amount === 0n) {
+          displayedLock = null;
+          stopCountdown();
+          vaultCard.style.display = "none";
+          emptyCard.style.display = "block";
+          topupCard.style.display = "none";
+          withdrawCard.style.display = "none";
+          depositTitle.textContent = "Lock ETH";
+          return;
+        }
+        const now = BigInt(Math.floor(Date.now() / 1000));
+        // We don't have lockedAt on chain; estimate as unlockTime - 1d (best guess for progress display)
+        // In practice we use the value we cached after deposit, fallback to a heuristic
+        const unlockTime = Number(lock.unlockTime);
+        const lockedAt = displayedLock?.lockedAt && displayedLock.address === userAddress
+          ? displayedLock.lockedAt
+          : unlockTime - 86400; // fallback 1d before
+        displayedLock = {
+          address: userAddress, isMine: true,
+          amount: lock.amount, unlockTime: lock.unlockTime, lockedAt,
+        };
+        vaultTitle.textContent = "Your vault";
+        vaultAmount.textContent = `${formatEth(lock.amount)} ETH`;
+        progressStart.textContent = "Locked";
+        progressEnd.textContent = `Unlocks ${new Date(unlockTime * 1000).toLocaleString()}`;
+        vaultCard.style.display = "block";
+        emptyCard.style.display = "none";
+        topupCard.style.display = "block";
+        withdrawCard.style.display = "block";
+        depositTitle.textContent = "Lock new ETH (after withdraw)";
+        depositBtn.disabled = true;
+
+        const remaining = unlockTime - Number(now);
+        if (remaining <= 0) {
+          withdrawBtn.disabled = false;
+          withdrawHint.textContent = "Your funds are unlocked. Click below to withdraw.";
+        } else {
+          withdrawBtn.disabled = true;
+          withdrawHint.textContent = `Available after ${new Date(unlockTime * 1000).toLocaleString()}.`;
+        }
+        startCountdown();
+      } catch (err) {
+        console.error("loadMyLock failed:", err);
+      }
+    }
+
+    async function lookupLock() {
+      const addr = lookupInput.value.trim();
+      if (!isAddress(addr)) { showToast(lookupResult, "error", "Not a valid 0x… address."); return; }
+      lookupResult.innerHTML = "";
+      try {
+        const reader = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, new JsonRpcProvider(BASE_RPC));
+        const lock = await reader.locks(addr);
+        if (lock.amount === 0n) {
+          showToast(lookupResult, "info", `${shortenAddress(addr)} has no active lock.`);
+          return;
+        }
+        const unlockTime = Number(lock.unlockTime);
+        displayedLock = { address: addr, isMine: false, amount: lock.amount, unlockTime: lock.unlockTime, lockedAt: unlockTime - 86400 };
+        vaultTitle.innerHTML = `Vault of <a href="${BASESCAN_ADDR}${addr}" target="_blank" rel="noopener">${shortenAddress(addr)}</a>`;
+        vaultAmount.textContent = `${formatEth(lock.amount)} ETH`;
+        progressStart.textContent = "Locked";
+        progressEnd.textContent = `Unlocks ${new Date(unlockTime * 1000).toLocaleString()}`;
+        vaultCard.style.display = "block";
+        emptyCard.style.display = "none";
+        topupCard.style.display = "none";
+        withdrawCard.style.display = "none";
+        startCountdown();
+        showToast(lookupResult, "info", `Showing vault of ${shortenAddress(addr)}. <a href="#" id="back-mine">Back to my vault</a>`);
+        $("back-mine")?.addEventListener("click", e => { e.preventDefault(); lookupResult.innerHTML = ""; if (contract) loadMyLock(); });
+      } catch (err) {
+        showToast(lookupResult, "error", `Lookup failed: ${escapeHtml(err.message)}`);
+      }
+    }
+
+    function updateDepositBtn() {
+      const amount = parseFloat(amountInput.value);
+      const unlock = unlockInput.value;
+      depositBtn.disabled = !contract || isNaN(amount) || amount <= 0 || !unlock || (displayedLock?.isMine && displayedLock.amount > 0n);
+    }
+
+    presetButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const days = parseInt(btn.dataset.days);
+        const date = new Date();
+        date.setDate(date.getDate() + days);
+        // local datetime-local format yyyy-mm-ddThh:mm
+        const pad = n => String(n).padStart(2, "0");
+        unlockInput.value = `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        presetButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        updateDepositBtn();
+      });
+    });
+
+    async function deposit() {
+      const amount = parseFloat(amountInput.value);
+      const unlockStr = unlockInput.value;
+      if (!unlockStr) { showToast(depositResult, "error", "Pick an unlock time."); return; }
+      const unlockTime = Math.floor(new Date(unlockStr).getTime() / 1000);
+      const now = Math.floor(Date.now() / 1000);
+      if (unlockTime <= now) { showToast(depositResult, "error", "Unlock time must be in the future."); return; }
+
+      depositBtn.disabled = true;
+      const original = depositBtn.textContent;
+      depositBtn.textContent = "Confirm…";
+      try {
+        const tx = await contract.deposit(unlockTime, { value: parseEther(amount.toString()) });
+        depositBtn.textContent = "Pending…";
+        showToast(depositResult, "success", `Sent: <a href="${BASESCAN_TX}${tx.hash}" target="_blank" rel="noopener">${tx.hash.slice(0,10)}…</a>`);
+        await tx.wait();
+        showToast(depositResult, "success", `Locked ${amount} ETH ✓`);
+        amountInput.value = "";
+        // remember lockedAt for accurate progress
+        displayedLock = { address: userAddress, isMine: true, amount: parseEther(amount.toString()), unlockTime: BigInt(unlockTime), lockedAt: now };
+        await loadMyLock();
+      } catch (err) {
+        showToast(depositResult, "error", `Failed: ${escapeHtml(err.shortMessage || err.message)}`);
+      } finally {
+        depositBtn.textContent = original;
+        updateDepositBtn();
+      }
+    }
+
+    async function topUp() {
+      const amount = parseFloat(topupAmount.value);
+      if (isNaN(amount) || amount <= 0) { showToast(topupResult, "error", "Enter a valid amount."); return; }
+      topupBtn.disabled = true;
+      const original = topupBtn.textContent;
+      topupBtn.textContent = "Confirm…";
+      try {
+        const tx = await contract.topUp({ value: parseEther(amount.toString()) });
+        topupBtn.textContent = "Pending…";
+        showToast(topupResult, "success", `Sent: <a href="${BASESCAN_TX}${tx.hash}" target="_blank" rel="noopener">${tx.hash.slice(0,10)}…</a>`);
+        await tx.wait();
+        showToast(topupResult, "success", `Topped up +${amount} ETH ✓`);
+        topupAmount.value = "";
+        await loadMyLock();
+      } catch (err) {
+        showToast(topupResult, "error", `Failed: ${escapeHtml(err.shortMessage || err.message)}`);
+      } finally {
+        topupBtn.textContent = original;
+        topupBtn.disabled = isNaN(parseFloat(topupAmount.value)) || parseFloat(topupAmount.value) <= 0;
+      }
+    }
+
+    async function withdrawAll() {
+      withdrawBtn.disabled = true;
+      const original = withdrawBtn.textContent;
+      withdrawBtn.textContent = "Confirm…";
+      try {
+        const tx = await contract.withdraw();
+        withdrawBtn.textContent = "Pending…";
+        showToast(withdrawResult, "success", `Withdrawing… <a href="${BASESCAN_TX}${tx.hash}" target="_blank" rel="noopener">${tx.hash.slice(0,10)}…</a>`);
+        await tx.wait();
+        showToast(withdrawResult, "success", `Done ✓ ETH sent to your wallet.`);
+        await loadMyLock();
+      } catch (err) {
+        showToast(withdrawResult, "error", `Failed: ${escapeHtml(err.shortMessage || err.message)}`);
+      } finally {
+        withdrawBtn.textContent = original;
+      }
+    }
+
+    function listenForEvents() {
+      try {
+        contract.on("Deposited", (user) => { if (user.toLowerCase() === userAddress.toLowerCase()) loadMyLock(); });
+        contract.on("ToppedUp", (user) => { if (user.toLowerCase() === userAddress.toLowerCase()) loadMyLock(); });
+        contract.on("Withdrawn", (user) => { if (user.toLowerCase() === userAddress.toLowerCase()) loadMyLock(); });
+      } catch (e) { console.warn(e); }
+    }
+
     function disconnectWallet() {
       setManuallyDisconnected(true);
-      provider = null; signer = null; userAddress = null; currentChainId = null;
+      try { if (contract) contract.removeAllListeners(); } catch {}
+      stopCountdown();
+      provider = null; signer = null; contract = null; userAddress = null; currentChainId = null;
+      displayedLock = null;
       renderDisconnected(); networkWarning.innerHTML = "";
+      vaultCard.style.display = "none";
+      emptyCard.style.display = "block";
+      topupCard.style.display = "none";
+      withdrawCard.style.display = "none";
+      depositBtn.disabled = true;
+      topupBtn.disabled = true;
+      withdrawBtn.disabled = true;
     }
+
     async function connectWallet(silent = false) {
       if (!window.ethereum) { if (!silent) alert("No wallet detected."); return; }
       try {
@@ -114,12 +556,36 @@
         const network = await provider.getNetwork();
         currentChainId = network.chainId;
         renderConnected(network.chainId === BASE_CHAIN_ID);
-        await checkNetwork();
-      } catch (err) { console.error(err); renderDisconnected(); }
+        const ok = await checkNetwork();
+        if (!ok) return;
+        contract = new Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+        await loadMyLock();
+        listenForEvents();
+        updateDepositBtn();
+      } catch (err) {
+        console.error(err);
+        renderDisconnected();
+      }
     }
+
+    amountInput.addEventListener("input", updateDepositBtn);
+    unlockInput.addEventListener("input", updateDepositBtn);
+    depositBtn.addEventListener("click", deposit);
+    topupAmount.addEventListener("input", () => {
+      const v = parseFloat(topupAmount.value);
+      topupBtn.disabled = isNaN(v) || v <= 0;
+    });
+    topupBtn.addEventListener("click", topUp);
+    withdrawBtn.addEventListener("click", withdrawAll);
+    lookupBtn.addEventListener("click", lookupLock);
+    lookupInput.addEventListener("keydown", e => { if (e.key === "Enter") lookupLock(); });
+
     renderDisconnected();
     (async () => { if (!isManuallyDisconnected()) await connectWallet(true); })();
-    if (window.ethereum) { window.ethereum.on("chainChanged", () => window.location.reload()); window.ethereum.on("accountsChanged", () => window.location.reload()); }
+    if (window.ethereum) {
+      window.ethereum.on("chainChanged", () => window.location.reload());
+      window.ethereum.on("accountsChanged", () => window.location.reload());
+    }
   </script>
 </body>
 </html>
