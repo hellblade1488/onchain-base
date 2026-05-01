@@ -14,6 +14,8 @@ and the owner can withdraw the accumulated balance.
 - 📜 Real-time list of the last 10 tips
 - 👑 Owner-only withdraw section (auto-shown if connected wallet matches owner)
 - 🔔 Live updates via the contract's `NewTip` event
+- 💾 Auto-reconnect on page load + persistent disconnect
+- 🌐 Network indicator pill with one-click switch to Base
 - 📱 Mobile responsive
 
 ## Tech
@@ -24,7 +26,7 @@ and the owner can withdraw the accumulated balance.
 
 ## Live demo
 
-`https://hellblade1488.github.io/onchain-base/dapps/tipjar/`
+[hellblade1488.github.io/onchain-base/dapps/tipjar/](https://hellblade1488.github.io/onchain-base/dapps/tipjar/)
 
 ## Contract
 
@@ -33,6 +35,15 @@ and the owner can withdraw the accumulated balance.
 | Address | [`0x1aacf2B6e0f4da4B7DF380Fd048566CD66eD2C1F`](https://basescan.org/address/0x1aacf2B6e0f4da4B7DF380Fd048566CD66eD2C1F) |
 | Network | Base mainnet (chain id `8453`) |
 | Source | [`contracts/2_TipJar.sol`](../../contracts/2_TipJar.sol) |
+
+## Sibling dApps
+
+Other dApps in this repo:
+
+- [**guestbook**](../guestbook/) — public on-chain guestbook
+- [**voting**](../voting/) — on-chain polls
+- [**vault**](../vault/) — time-locked ETH savings
+- [**todo**](../todo/) — personal todo list on chain
 
 ## License
 
